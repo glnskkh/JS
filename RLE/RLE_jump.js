@@ -7,7 +7,6 @@
 const COUNT_MIN = 3;
 const BYTE_MAX = (1 << 8) - 1;
 const MUL_RANGE = BYTE_MAX / 2;
-const SINGLE_RANGE = BYTE_MAX - MUL_RANGE;
 
 /**
  * Encode text with RLE (jumping)
@@ -24,7 +23,30 @@ function RLE_encode(string) {
  * @returns String
  */
 function RLE_decode(string) {
+  let output = "";
 
+  for (let i = 0; i < string.length;) {
+    const countChar = string[i++];
+
+    let count = countChar.charCodeAt(0);
+
+    if (count <= MUL_RANGE) {
+      const char = string[i++];
+
+      for (let j = 0; j < count; j++)
+        output = output.concat(char);
+    } else {
+      count = count - MUL_RANGE;
+
+      for (; i < count; i++) {
+        const char = string[i];
+
+        output = output.concat(char);
+      }
+    }
+  }
+
+  return output;
 }
 
 
