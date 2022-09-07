@@ -12,40 +12,42 @@ const COUNT_MIN = 4; // Otherwise there is no point in RLE
  * @returns String
  */
 function RLE_encode(string) {
-  if (string.length < 2) {
+  // Otherwise there if no point in RLE
+  if (string.length < COUNT_MIN) {
     return string;
   }
 
-  let count = 1;
-  let lastChar = string[0];
+  // Resulting string
   let output = "";
 
-  for (const char of string.slice(1)) {
-    if (char == lastChar)
-      count++;
-    else {
-      if (count >= COUNT_MIN || lastChar == ESCAPE_CODE) {
-        let countChar =
-          String.fromCharCode(
-            lastChar == ESCAPE_CODE ? count : count - COUNT_MIN
-          );
+  for (let i = 0, j = 0; i < string.length; i = j) {
+    let currentChar = string[i];
 
-        output = output
-          .concat(ESCAPE_CODE)
-          .concat(countChar)
-          .concat(lastChar);
-      } else {
-        for (; count > 0; count--)
-          output = output.concat(lastChar);
-      }
+    // Shift j to next different charachter
+    j = i + 1;
+    while (string[j] == currentChar && j < string.length)
+      j++;
 
-      count = 1;
+    let count = j - i;
+
+    if (count >= COUNT_MIN || currentChar == ESCAPE_CODE) {
+      let countChar =
+        String.fromCharCode(
+          // In case if character is not ESCAPE_CODE:
+          // We store (count - COUNT_MIN) instead of count.
+          // Just because count >= COUNT_MIN
+          currentChar == ESCAPE_CODE ? count : count - COUNT_MIN
+        );
+
+      output = output
+        .concat(ESCAPE_CODE)
+        .concat(countChar)
+        .concat(currentChar);
+    } else {
+      for (; count > 0; count--)
+        output = output.concat(currentChar);
     }
-
-    lastChar = char;
   }
-
-  output = output.concat(lastChar);
 
   return output;
 }
