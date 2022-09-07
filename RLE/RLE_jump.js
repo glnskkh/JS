@@ -14,7 +14,6 @@ const MUL_RANGE = BYTE_MAX / 2;
  * @returns String
  */
 function RLE_encode(string) {
-
 }
 
 /**
@@ -28,18 +27,20 @@ function RLE_decode(string) {
   for (let i = 0; i < string.length;) {
     const countChar = string[i++];
 
+    // Get char code of countChar
     let count = countChar.charCodeAt(0);
 
     if (count <= MUL_RANGE) {
       const char = string[i++];
 
-      for (let j = 0; j < count; j++)
+      for (; count > 0; count--)
         output = output.concat(char);
     } else {
       count = count - MUL_RANGE;
 
-      for (; i < count; i++) {
-        const char = string[i];
+      for (; count > 0; count--) {
+        // !!! Shift i
+        const char = string[i++];
 
         output = output.concat(char);
       }
