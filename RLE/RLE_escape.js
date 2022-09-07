@@ -1,4 +1,6 @@
+//
 // The following program uses escaping symbol to encode string
+//
 
 //@ts-check
 
@@ -78,15 +80,21 @@ function RLE_decode(string) {
 
 const fs = require('fs');
 
-let inputFile = process.argv[2];
-let outputFile = process.argv[3];
+let type = process.argv[2];
+
+let is_encoding = type.startsWith('en');
+let is_decoding = type.startsWith('de');
+
+if (type == undefined || !(is_encoding || is_decoding)) {
+  console.error("you should specify enc|dec mode");
+  process.exit(1);
+}
+
+const inputFile = process.argv[3];
+const outputFile = process.argv[4];
 
 let content = fs.readFileSync(inputFile, 'utf8');
 
-let result = RLE_encode(content);
+let result = is_encoding ? RLE_encode(content) : RLE_decode(content);
 
-// console.log(result);
-
-let back_result = RLE_decode(result);
-
-console.log(back_result);
+fs.writeFileSync(outputFile, result, 'utf8');
