@@ -85,8 +85,8 @@ let type = process.argv[2];
 let is_encoding = type.startsWith('en');
 let is_decoding = type.startsWith('de');
 
-if (type == undefined || !(is_encoding || is_decoding)) {
-  console.error("you should specify enc|dec mode");
+if (!is_encoding && !is_decoding) {
+  console.error("you should specify encode or decode mode");
   process.exit(1);
 }
 
