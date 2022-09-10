@@ -6,6 +6,7 @@
 
 const ESCAPE_CODE = '#';
 const COUNT_MIN = 4; // Otherwise there is no point in RLE
+const BYTE_MAX = (1 << 8) - 1;
 
 /**
  * @param {String} string
@@ -23,9 +24,14 @@ function RLE_encode(string) {
   for (let i = 0, j = 0; i < string.length; i = j) {
     let currentChar = string[i];
 
+    let additional =
+      currentChar == ESCAPE_CODE ? 0 : COUNT_MIN;
+
     // Shift j to next different charachter
     j = i + 1;
-    while (string[j] == currentChar && j < string.length)
+    while (string[j] == currentChar &&
+      j < string.length &&
+      (j - i) < (BYTE_MAX + additional))
       j++;
 
     let count = j - i;
@@ -36,7 +42,7 @@ function RLE_encode(string) {
           // In case if character is not ESCAPE_CODE:
           // We store (count - COUNT_MIN) instead of count.
           // Just because count >= COUNT_MIN
-          currentChar == ESCAPE_CODE ? count : count - COUNT_MIN
+          count - additional
         );
 
       output = output

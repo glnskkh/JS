@@ -6,7 +6,10 @@
 
 const COUNT_MIN = 3;
 const BYTE_MAX = (1 << 8) - 1;
-const MUL_RANGE = BYTE_MAX / 2;
+
+// MUL_RANGE + SIN_RANGE <= BYTE_MAX
+const MUL_RANGE = Math.floor(BYTE_MAX / 2);
+const SIN_RANGE = BYTE_MAX - MUL_RANGE;
 
 /**
  * Encode text with RLE (jumping)
@@ -14,6 +17,63 @@ const MUL_RANGE = BYTE_MAX / 2;
  * @returns String
  */
 function RLE_encode(string) {
+  let output = "";
+  let buffer = '';
+
+  for (let i = 0, j = 0; i < string.length; i = j) {
+    let currentChar = string[i];
+
+    j = i + 1;
+    while (string[j] == currentChar && j < string.length)
+      j++;
+
+    let count = j - i;
+
+    if (count >= COUNT_MIN) {
+      while (buffer.length > 0) {
+        let bufferCountChar =
+          String.fromCharCode(Math.min(buffer.length, SIN_RANGE));
+
+        output = output
+          .concat(bufferCountChar)
+          .concat(buffer.substring(0, SIN_RANGE));
+
+        buffer = buffer.slice(SIN_RANGE);
+      }
+
+      buffer = '';
+
+      while (count > 0) {
+        count -= COUNT_MIN;
+
+        let countChar = String.fromCharCode(Math.min(count, MUL_RANGE));
+
+        output = output
+          .concat(countChar)
+          .concat(currentChar);
+
+        count -= MUL_RANGE;
+      }
+    } else {
+      for (; count > 0; count--)
+        buffer = buffer.concat(currentChar);
+    }
+  }
+
+  if (0 < buffer.length) {
+    while (buffer.length > 0) {
+      let bufferCountChar =
+        String.fromCharCode((buffer.length % SIN_RANGE) + MUL_RANGE);
+
+      output = output
+        .concat(bufferCountChar)
+        .concat(buffer.substring(0, SIN_RANGE));
+
+      buffer = buffer.slice(SIN_RANGE);
+    }
+  }
+
+  return output;
 }
 
 /**
@@ -31,12 +91,14 @@ function RLE_decode(string) {
     let count = countChar.charCodeAt(0);
 
     if (count <= MUL_RANGE) {
+      count += COUNT_MIN;
+
       const char = string[i++];
 
       for (; count > 0; count--)
         output = output.concat(char);
     } else {
-      count = count - MUL_RANGE;
+      count -= MUL_RANGE;
 
       for (; count > 0; count--) {
         // !!! Shift i
