@@ -29,17 +29,20 @@ for (let i = 0; i < content.length; i++) {
 // Calculate entropy
 let entropy = 0;
 
-let log =
-  process.argv[3] != undefined ?
-    parseFloat(process.argv[3]) :
-    (chars.length == 1 ? 2 : chars.length);
+if (chars.length == 1)
+  console.log(entropy);
+else {
+  let log =
+    process.argv[3] != undefined ?
+      parseFloat(process.argv[3]) : chars.length;
 
-let diffLog = 1 / Math.log2(log);
+  let diffLog = 1 / Math.log2(log);
 
-for (let i = 0; i < chars.length; i++) {
-  let p = count[i] / contentLen;
+  for (let i = 0; i < chars.length; i++) {
+    let p = count[i] / contentLen;
 
-  entropy += -1 * p * Math.log2(p) * diffLog;
+    entropy += -1 * p * Math.log2(p) * diffLog;
+  }
+
+  console.log(entropy.toPrecision(2));
 }
-
-console.log(entropy.toPrecision(2));
