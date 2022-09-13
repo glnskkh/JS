@@ -115,6 +115,15 @@ function RLE_decode(string) {
 
 const fs = require('fs');
 
+// Test
+const testString = "aaaabbbbb#12345";
+console.log(
+  "But tests are ".concat(
+    RLE_decode(RLE_encode(testString)) == testString ?
+      "VALID" : "INVALID"
+  )
+)
+
 let type = process.argv[2];
 
 let is_encoding = type.startsWith('en');
