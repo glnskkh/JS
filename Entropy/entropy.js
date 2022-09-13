@@ -16,8 +16,9 @@ for (let i = 0; i < content.length; i++) {
 
   if (index == -1) {
     // if it is not in list
-    chars = chars.concat(char);
-    count = count.concat(0);
+    chars.push(char);
+    count.push(0);
+
 
     index = chars.length - 1;
   }
@@ -28,12 +29,11 @@ for (let i = 0; i < content.length; i++) {
 // Calculate entropy
 let entropy = 0;
 
-let log = process.argv[3];
-if (log == undefined) {
-  log = chars.length;
-} else {
-  log = parseFloat(log);
-}
+let log =
+  process.argv[3] != undefined ?
+    parseFloat(process.argv[3]) :
+    (chars.length == 1 ? 2 : chars.length);
+
 let diffLog = 1 / Math.log2(log);
 
 for (let i = 0; i < chars.length; i++) {
@@ -42,4 +42,4 @@ for (let i = 0; i < chars.length; i++) {
   entropy += -1 * p * Math.log2(p) * diffLog;
 }
 
-console.log(entropy);
+console.log(entropy.toPrecision(2));
