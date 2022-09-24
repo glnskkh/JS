@@ -26,6 +26,14 @@ for (let i = 0; i < content.length; i++) {
   count[index]++;
 }
 
+// Print table of occurences
+console.log('char\tcount\tp')
+for (let i = 0; i < chars.length; i++) {
+  let p = (count[i] / contentLen).toPrecision(2);
+
+  console.log(`${chars[i]}\t${count[i]}\t${p}`);
+}
+
 // Calculate entropy
 let entropy = 0;
 
