@@ -1,0 +1,21 @@
+# Compute gcd
+
+mov '0 $3  # Read first and
+mov '1 $4  # second number from console
+
+# Euclids algo for finding GCD('0; '1)
+loop:
+  cmp '0 '1
+
+  jgz Le else
+  sub '0 '1
+  jmp check
+
+  else:
+    sub '1 '0
+
+check:
+  cmp '0 '1
+  jez Eq loop
+
+put '0
