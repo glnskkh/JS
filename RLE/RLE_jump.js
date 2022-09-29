@@ -1,10 +1,12 @@
+#!/usr/bin/node
+
 //
 // Following program encodes & decodes text with RLE (jump variant)
 //
 
 // @ts-check
 
-const COUNT_MIN = 3;
+const COUNT_MIN = 3; // Minimum sequance lenght
 const BYTE_MAX = (1 << 8) - 1;
 
 // MUL_RANGE + SIN_RANGE <= BYTE_MAX
@@ -18,7 +20,7 @@ const SIN_RANGE = BYTE_MAX - MUL_RANGE;
  */
 function RLE_encode(string) {
   let output = "";
-  let buffer = '';
+  let buffer = "";
 
   for (let i = 0, j = 0; i < string.length; i = j) {
     let currentChar = string[i];
@@ -41,7 +43,7 @@ function RLE_encode(string) {
         buffer = buffer.slice(SIN_RANGE);
       }
 
-      buffer = '';
+      buffer = "";
 
       while (count > 0) {
         count -= COUNT_MIN;
@@ -135,6 +137,12 @@ if (!is_encoding && !is_decoding) {
 }
 
 const inputFile = process.argv[3];
+
+if (!fs.existsSync(inputFile)) {
+  console.error("there is no such file, please specify exsiting one");
+  process.exit(1);
+}
+
 const outputFile = process.argv[4];
 
 let content = fs.readFileSync(inputFile, 'utf8');

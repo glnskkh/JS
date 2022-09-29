@@ -1,11 +1,13 @@
+#!/usr/bin/node
+
 //
 // The following program uses escaping symbol to encode string
 //
 
 //@ts-check
 
-const ESCAPE_CODE = '#';
-const COUNT_MIN = 4; // Otherwise there is no point in RLE
+const ESCAPE_CHAR = '#';
+const COUNT_MIN = 4; // Minimum sequance lenght
 const BYTE_MAX = (1 << 8) - 1;
 
 /**
@@ -25,7 +27,7 @@ function RLE_encode(string) {
     let currentChar = string[i];
 
     let additional =
-      currentChar == ESCAPE_CODE ? 0 : COUNT_MIN;
+      currentChar == ESCAPE_CHAR ? 0 : COUNT_MIN;
 
     // Shift j to next different charachter
     j = i + 1;
@@ -36,17 +38,17 @@ function RLE_encode(string) {
 
     let count = j - i;
 
-    if (count >= COUNT_MIN || currentChar == ESCAPE_CODE) {
+    if (count >= COUNT_MIN || currentChar == ESCAPE_CHAR) {
       let countChar =
         String.fromCharCode(
           // In case if character is not ESCAPE_CODE:
           // We store (count - COUNT_MIN) instead of count.
-          // Just because count >= COUNT_MIN
+          // Because count >= COUNT_MIN
           count - additional
         );
 
       output = output
-        .concat(ESCAPE_CODE)
+        .concat(ESCAPE_CHAR)
         .concat(countChar)
         .concat(currentChar);
     } else {
@@ -68,13 +70,13 @@ function RLE_decode(string) {
   for (let i = 0; i < string.length; i++) {
     const char = string[i];
 
-    if (char == ESCAPE_CODE) {
+    if (char == ESCAPE_CHAR) {
       let countChar = string[++i];
       let count = countChar.charCodeAt(0);
 
       let char = string[++i];
 
-      count = count + (char == ESCAPE_CODE ? 0 : COUNT_MIN);
+      count = count + (char == ESCAPE_CHAR ? 0 : COUNT_MIN);
 
       for (; count > 0; count--)
         output = output.concat(char);
@@ -99,6 +101,12 @@ if (!is_encoding && !is_decoding) {
 }
 
 const inputFile = process.argv[3];
+
+if (!fs.existsSync(inputFile)) {
+  console.error("there is no such file, please specify exsiting one");
+  process.exit(1);
+}
+
 const outputFile = process.argv[4];
 
 let content = fs.readFileSync(inputFile, 'utf8');
