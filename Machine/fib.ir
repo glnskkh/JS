@@ -1,17 +1,19 @@
 # Find fibonacci number
 
-mov '0 $3
+mov '0 $3         # Read N from argv
 
-mov '1 0
-mov '2 1
+mov '1 0          # f_0 = 0
+mov '2 1          # f_1 = 1
 
-loop:
-  mov '3 '2
-  add '2 '1
-  mov '1 '3
+loop:             # Invariant: f_(N - '0) = '1 + '2
+  mov '3 '2       # t = a
+  add '2 '1       # a = a + b
+  mov '1 '3       # b = t
 
-  sub '0 1
+  sub '0 1        # '0--
 
-  jgz '0 loop
+  jgz '0 loop     # Perform while '0 != 0
 
-put '1
+# '0 = 0 => f_(N - '0) = f_N = '1
+
+put '1            # Print result to stdout

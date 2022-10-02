@@ -1,21 +1,22 @@
 # Compute gcd
-
-mov '0 $3  # Read first and
-mov '1 $4  # second number from console
-
 # Euclids algo for finding GCD('0; '1)
-loop:
-  cmp '0 '1
 
-  jgz Le else
-  sub '0 '1
-  jmp check
+mov '0 $3         # Read first and
+mov '1 $4         # second number from argv
+
+mov '2 0          # Registry for comparation
+
+loop:
+  cmp '0 '1 '2    # Compare '0 '1 -> '2
+  jgz '2 else     # jump to else
+  sub '0 '1       # Substract '1 from '0
+  jmp check       # And check whether they are the same
 
   else:
-    sub '1 '0
+    sub '1 '0     # Substract '0 form '1
 
 check:
-  cmp '0 '1
-  jez Eq loop
+  cmp '0 '1       # Compare '0 '1 -> '2
+  jez '2 loop     # If they are not the same, perform operation
 
-put '0
+put '0            # Print result to stdout
