@@ -1,151 +1,148 @@
-// @ts-check
+const perform = {
+  get: (address) => {
+    let index, value;
 
-const fs = require('fs');
+    address = String(address);
 
-let fileName = process.argv[2];
+    if (address.startsWith("$")) {
+      index = Number(address.replace("$", ""));
+      value = Number(process.argv[index]);
+    } else if (address.startsWith("\'")) {
+      index = Number(address.replace("\'", ""));
+      value = mem[index];
+    } else if (address.match(/[0-9]+/)) {
+      value = Number(address);
+    }
 
-let program = fs.readFileSync(fileName, 'utf8');
-run(program);
+    return { value, index };
+  },
+  set: (addressTo, addressFrom) => {
+    let indexTo = perform.get(addressTo).index;
+    let valueFrom = perform.get(addressFrom).value;
 
-/**
- * @param {string} program
- */
-function run(program) {
-  let mem = [];
+    mem[indexTo] = valueFrom;
+  },
+  mov: (addressTo, addressFrom) => {
+    let indexTo = perform.get(addressTo).index;
 
-  let { normProgram, labelTable } = unlabel(program);
-  let flags = {
-    Eq: 0,
-    Gr: 0,
-    Le: 0
-  }
+    while (!(indexTo < mem.length))
+      mem.push(0);
 
-  let curCommand = 0;
+    perform.set(addressTo, addressFrom);
+  },
+  add: (addressTo, addressFrom) => {
+    let valueTo = perform.get(addressTo).value;
+    let valueFrom = perform.get(addressFrom).value;
 
-  const perform = {
-    get: (/** @type {string} */ value) => {
-      let index;
+    perform.set(addressTo, valueTo + valueFrom);
+  },
+  sub: (addressTo, addressFrom) => {
+    let valueTo = perform.get(addressTo).value;
+    let valueFrom = perform.get(addressFrom).value;
 
-      if (value.startsWith("$")) {
-        index = Number(value.replace("$", ""));
+    perform.set(addressTo, valueTo - valueFrom);
+  },
+  put: (address) => {
+    console.log(perform.get(address).value);
+  },
+  jgz: (address, label) => {
+    let value = perform.get(address).value;
 
-        return { index: Number(process.argv[index]), type: "arg" };
-      } else if (value.startsWith("\'")) {
-        index = Number(value.replace("\'", ""));
+    if (value > 0)
+      perform.jmp(label);
+  },
+  jlz: (address, label) => {
+    let value = perform.get(address).value;
 
-        return { index, type: "addr" };
-      } else if (value.match(/[0-9]+/)) {
-        index = Number(value);
+    if (value < 0)
+      perform.jmp(label);
+  },
+  jez: (address, label) => {
+    let value = perform.get(address).value;
 
-        return { index, type: "num" };
-      } else {
-        index = flags[value];
+    if (value == 0)
+      perform.jmp(label);
+  },
+  jnz: (address, label) => {
+    let value = perform.get(address).value;
 
-        return { index, type: "flag" };
-      }
+    if (value != 0)
+      perform.jmp(label);
+  },
+  jmp: (label) => {
+    currentCommand = labelTable[label];
+  },
+  cmp: (addressA, addressB, addressTo) => {
+    let a = perform.get(addressA).value;
+    let b = perform.get(addressB).value;
 
-    },
-    mov: (to, from) => {
-      let toIndex = perform.get(to).index;
-
-      while (toIndex >= mem.length)
-        mem.push(0);
-
-      let f = perform.get(from);
-      let fromValue = f.type == "addr" ? mem[f.index] : f.index;
-
-      mem[toIndex] = fromValue;
-    },
-    add: (to, from) => {
-      let toIndex = perform.get(to).index;
-
-      let f = perform.get(from);
-      let fromValue = f.type == "addr" ? mem[f.index] : f.index;
-
-      mem[toIndex] += fromValue;
-    },
-    sub: (to, from) => {
-      let toIndex = perform.get(to).index;
-
-      let f = perform.get(from);
-      let fromValue = f.type == "addr" ? mem[f.index] : f.index;
-
-      mem[toIndex] -= fromValue;
-    },
-    put: (value) => console.log(mem[perform.get(value).index]),
-    jgz: (value, label) => {
-      let v = perform.get(value);
-
-      let b = v.type == "addr" ? mem[v.index] : v.index;
-
-      if (b > 0) curCommand = labelTable[label];
-    },
-    cmp: (a, b) => {
-      let ai = perform.get(a);
-      let bi = perform.get(b);
-
-      let av = ai.type == "addr" ? mem[ai.index] : ai.index;
-      let bv = bi.type == "addr" ? mem[bi.index] : bi.index;
-
-      if (av > bv)
-        flags.Eq = 0, flags.Le = 0, flags.Gr = 1;
-      if (av == bv)
-        flags.Eq = 1, flags.Le = 0, flags.Gr = 0;
-      if (av < bv)
-        flags.Eq = 0, flags.Le = 1, flags.Gr = 0;
-    },
-    jez: (value, label) => {
-      let v = perform.get(value);
-
-      let b = v.type == "addr" ? mem[v.index] : v.index;
-
-      if (b == 0) curCommand = labelTable[label];
-    },
-    jmp: (label) => { curCommand = labelTable[label]; }
-  }
-
-  while (curCommand != normProgram.length) {
-    let line = normProgram[curCommand];
-
-    let command = line[0];
-    let args = line.slice(1);
-
-    curCommand += 1;
-
-    perform[command](...args);
-  }
+    if (a > b)
+      perform.mov(addressTo, "1");
+    else if (a < b)
+      perform.mov(addressTo, "-1");
+    else
+      perform.mov(addressTo, "0");
+  },
 }
 
-function unlabel(program) {
+function preprocess(program) {
   let lines = program.split('\n');
 
   let labelTable = {};
-  let normProgram = [];
+  let plainProgram = [];
 
   for (let line of lines) {
-    let words = line.trim().split(' ');
+    let words = [];
+
+    for (let word of line.trim().split(' ')) {
+      if (word == '')
+        break;
+
+      words.push(word);
+    }
 
     if (words.length == 0)
       continue;
 
     let word = words[0];
 
-    if (word == '') // Empty line
-      continue;
-
-    if (word.startsWith("#")) // The rest of line is comment
+    if (word == '' || word.startsWith("#")) // Empty line
       continue;
 
     if (word.endsWith(":")) {  // This word is label
       let label = word.replace(":", "");
-
-      labelTable[label] = normProgram.length;
+      labelTable[label] = plainProgram.length;
 
       continue;
     }
 
-    normProgram.push(words);
+    plainProgram.push(words);
   }
 
-  return { normProgram, labelTable }
+  return { plainProgram, labelTable };
+}
+
+const fs = require('fs');
+
+let programFile = process.argv[2];
+
+if (!fs.existsSync(programFile)) {
+  console.log('please specify exsisting file');
+  process.exit(1);
+}
+
+let programText = fs.readFileSync(programFile, 'utf8');
+
+let mem = [];
+
+let { plainProgram, labelTable } = preprocess(programText);
+
+let currentCommand = 0;
+
+while (currentCommand != plainProgram.length) {
+  let line = plainProgram[currentCommand++];
+
+  let [command, ...args] = line;
+
+  perform[command](...args);
 }

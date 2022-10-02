@@ -6,9 +6,12 @@ mov '1 $4         # second number from argv
 
 mov '2 0          # Registry for comparation
 
+cmp '0 '1 '2
+jez '2 end
+
 loop:
   cmp '0 '1 '2    # Compare '0 '1 -> '2
-  jgz '2 else     # jump to else
+  jlz '2 else     # jump to else
   sub '0 '1       # Substract '1 from '0
   jmp check       # And check whether they are the same
 
@@ -16,7 +19,8 @@ loop:
     sub '1 '0     # Substract '0 form '1
 
 check:
-  cmp '0 '1       # Compare '0 '1 -> '2
-  jez '2 loop     # If they are not the same, perform operation
+  cmp '0 '1 '2      # Compare '0 '1 -> '2
+  jnz '2 loop     # If they are not the same, perform operation
 
-put '0            # Print result to stdout
+end:
+  put '0            # Print result to stdout
