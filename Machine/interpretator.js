@@ -17,13 +17,13 @@ const perform = {
     return { value, index };
   },
   set: (addressTo, addressFrom) => {
-    let indexTo = perform.get(addressTo).index;
-    let valueFrom = perform.get(addressFrom).value;
+    let { index: indexTo } = perform.get(addressTo);
+    let { value: valueFrom } = perform.get(addressFrom);
 
     mem[indexTo] = valueFrom;
   },
   mov: (addressTo, addressFrom) => {
-    let indexTo = perform.get(addressTo).index;
+    let { index: indexTo } = perform.get(addressTo);
 
     while (!(indexTo < mem.length))
       mem.push(0);
@@ -31,14 +31,14 @@ const perform = {
     perform.set(addressTo, addressFrom);
   },
   add: (addressTo, addressFrom) => {
-    let valueTo = perform.get(addressTo).value;
-    let valueFrom = perform.get(addressFrom).value;
+    let { value: valueTo } = perform.get(addressTo);
+    let { value: valueFrom } = perform.get(addressFrom);
 
     perform.set(addressTo, valueTo + valueFrom);
   },
   sub: (addressTo, addressFrom) => {
-    let valueTo = perform.get(addressTo).value;
-    let valueFrom = perform.get(addressFrom).value;
+    let { value: valueTo } = perform.get(addressTo);
+    let { value: valueFrom } = perform.get(addressFrom).value;
 
     perform.set(addressTo, valueTo - valueFrom);
   },
@@ -46,25 +46,25 @@ const perform = {
     console.log(perform.get(address).value);
   },
   jgz: (address, label) => {
-    let value = perform.get(address).value;
+    let { value } = perform.get(address);
 
     if (value > 0)
       perform.jmp(label);
   },
   jlz: (address, label) => {
-    let value = perform.get(address).value;
+    let { value } = perform.get(address);
 
     if (value < 0)
       perform.jmp(label);
   },
   jez: (address, label) => {
-    let value = perform.get(address).value;
+    let { value } = perform.get(address);
 
     if (value == 0)
       perform.jmp(label);
   },
   jnz: (address, label) => {
-    let value = perform.get(address).value;
+    let { value } = perform.get(address);
 
     if (value != 0)
       perform.jmp(label);
