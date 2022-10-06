@@ -4,6 +4,9 @@
 mov '0 $3         # Read first and
 mov '1 $4         # second number from argv
 
+jlz '0 end
+jlz '1 end
+
 mov '2 0          # Registry for comparation
 
 cmp '0 '1 '2

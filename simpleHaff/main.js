@@ -122,24 +122,25 @@ class HaffTree extends BinTree {
 function haffmanEncode(content) {
   let chars = {};
   for (let char of content) {
-    chars[char] = chars[char] == undefined ? 0 : chars[char];
+    if (!chars[char])
+      chars[char] = 0;
 
     chars[char]++;
   }
 
-  let pq = new PriorityQueue();
+  let priorityQueue = new PriorityQueue();
 
   for (let char of Object.keys(chars)) {
     let tree = new HaffTree(
       new HaffNode(chars[char], char)
     );
 
-    pq.push(tree);
+    priorityQueue.push(tree);
   }
 
-  while (!(pq.array.length <= 1)) {
-    let least1 = pq.pop();
-    let least2 = pq.pop();
+  while (priorityQueue.array.length > 1) {
+    let least1 = priorityQueue.pop();
+    let least2 = priorityQueue.pop();
 
     let tree = new HaffTree(
       new HaffNode(least1.value.count + least2.value.count),
@@ -147,10 +148,10 @@ function haffmanEncode(content) {
       least2
     );
 
-    pq.push(tree);
+    priorityQueue.push(tree);
   }
 
-  let haffTree = pq.pop();
+  let haffTree = priorityQueue.pop();
 
   let charToCode = {};
   let next = [[haffTree.left, "0"], [haffTree.right, "1"]];

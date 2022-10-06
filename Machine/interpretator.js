@@ -144,5 +144,12 @@ while (currentCommand != plainProgram.length) {
 
   let [command, ...args] = line;
 
+  if (!Object.keys(perform).includes(command)) {
+    console.error("there is no such command!");
+    console.error(`command: ${command}`);
+    console.error(`mem trace: ${mem}`);
+    process.exit(1);
+  }
+
   perform[command](...args);
 }
