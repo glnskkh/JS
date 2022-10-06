@@ -194,8 +194,10 @@ function haffmanDecode(content, table) {
     }
   }
 
-  if (buffer.length != 0)
-    console.error("there were some errors during decode");
+  if (buffer.length != 0) {
+    console.error("there were some errors during decode rest of buffer: ");
+    console.log(buffer);
+  }
 
   return output;
 }
