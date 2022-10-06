@@ -4,28 +4,9 @@ function swap(array, i, j) {
   array[j] = t;
 }
 
-function binary(number) {
-  if (number == 0)
-    return "0"
-
-  let digits = [];
-
-  while (number > 0) {
-    digits.push((number % 2).toString());
-
-    number = Math.floor(number / 2);
-  }
-
-  for (let i = 0; i < digits.length / 2; i++)
-    swap(digits, i, (digits.length - 1) - i);
-
-  let result = digits.join("");
-
-  return result;
-}
-
 class PriorityQueue {
   constructor() {
+    /** @type {{getWeight: () => number}[]} */
     this.array = [];
   }
 
@@ -138,30 +119,6 @@ class HaffTree extends BinTree {
   }
 }
 
-const fs = require('fs');
-
-let type = process.argv[2];
-
-let isEncode = type.startsWith('en');
-let isDecode = type.startsWith('de');
-
-if (!(isEncode || isDecode)) {
-  console.log('specify mode (encode | decode)');
-  process.exit(1);
-}
-
-let inputFile = process.argv[3];
-
-if (!fs.existsSync(inputFile)) {
-  console.error("please specify existing file");
-  process.exit(1);
-}
-
-let tableFile = process.argv[4];
-let outputFile = process.argv[5];
-
-let content = fs.readFileSync(inputFile, 'utf8');
-
 function haffmanEncode(content) {
   let chars = {};
   for (let char of content) {
@@ -204,7 +161,7 @@ function haffmanEncode(content) {
       next.push([tree.left, code.concat("0")]);
       next.push([tree.right, code.concat("1")]);
     } else {
-      charToCode[tree.value.char] = binary(code);
+      charToCode[tree.value.char] = code;
     }
   }
 
@@ -217,9 +174,8 @@ function haffmanEncode(content) {
   }
 
   let output = "";
-  for (let char of content) {
+  for (let char of content)
     output = output.concat(charToCode[char]);
-  }
 
   return { output, table: codeToChar };
 }
@@ -243,6 +199,31 @@ function haffmanDecode(content, table) {
 
   return output;
 }
+
+
+const fs = require('fs');
+
+let type = process.argv[2];
+
+let isEncode = type.startsWith('en');
+let isDecode = type.startsWith('de');
+
+if (!(isEncode || isDecode)) {
+  console.log('specify mode (encode | decode)');
+  process.exit(1);
+}
+
+let inputFile = process.argv[3];
+
+if (!fs.existsSync(inputFile)) {
+  console.error("please specify existing file");
+  process.exit(1);
+}
+
+let tableFile = process.argv[4];
+let outputFile = process.argv[5];
+
+let content = fs.readFileSync(inputFile, 'utf8');
 
 if (isDecode) {
   if (!fs.existsSync(tableFile)) {

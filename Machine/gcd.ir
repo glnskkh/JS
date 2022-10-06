@@ -19,8 +19,8 @@ loop:
     sub '1 '0     # Substract '0 form '1
 
 check:
-  cmp '0 '1 '2      # Compare '0 '1 -> '2
+  cmp '0 '1 '2    # Compare '0 '1 -> '2
   jnz '2 loop     # If they are not the same, perform operation
 
 end:
-  put '0            # Print result to stdout
+  put '0          # Print result to stdout

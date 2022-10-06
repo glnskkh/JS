@@ -38,7 +38,7 @@ const perform = {
   },
   sub: (addressTo, addressFrom) => {
     let { value: valueTo } = perform.get(addressTo);
-    let { value: valueFrom } = perform.get(addressFrom).value;
+    let { value: valueFrom } = perform.get(addressFrom);
 
     perform.set(addressTo, valueTo - valueFrom);
   },
@@ -106,7 +106,7 @@ function preprocess(program) {
 
     let word = words[0];
 
-    if (word == '' || word.startsWith("#")) // Empty line
+    if (word == '' || word.startsWith("#")) // Empty line or comment
       continue;
 
     if (word.endsWith(":")) {  // This word is label
