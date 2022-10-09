@@ -1,0 +1,12 @@
+.content {
+  width: 40%;
+  padding-right: 30%;
+  padding-left: 30%;
+  padding-top: 10%;
+  font-family: 'IBM Plex Sans';
+}
+
+.row,
+h1 {
+  text-align: center;
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+
+<head>
+  <title>Hamming code</title>
+  <meta charset="utf8">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="content">
+    <h1>Hamming code</h1>
+    <hr>
+
+    <div class="row">
+      <p>Code</p>
+      <input type="text" name="Code" id="coded" maxlength="4" minlength="4">
+      <input type="button" value="Encode!" id="codedButton" disabled>
+      <script>
+
+      </script>
+    </div>
+    <div class="row">
+      <p>Encoded</p>
+      <input type="text" name="Encoded" id="encoded" maxlength="7" minlength="7">
+      <input type="button" value="Decode!" id="encodedButton" disabled>
+      <span id="errorSpan"></span>
+    </div>
+  </div>
+
+  <script src="hamming.js"></script>
+  <script src="setup.js"></script>
+</body>
