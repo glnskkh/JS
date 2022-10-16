@@ -11,18 +11,15 @@
     <h1>Hamming code</h1>
     <hr>
 
-    <div class="row">
+    <div class="row code">
       <p>Code</p>
-      <input type="text" name="Code" id="coded" maxlength="4" minlength="4">
-      <input type="button" value="Encode!" id="codedButton" disabled>
-      <script>
-
-      </script>
+      <input type="text" name="Code" maxlength="4" minlength="4">
+      <button disabled>Encode!</button>
     </div>
-    <div class="row">
+    <div class="row encode">
       <p>Encoded</p>
-      <input type="text" name="Encoded" id="encoded" maxlength="7" minlength="7">
-      <input type="button" value="Decode!" id="encodedButton" disabled>
+      <input type="text" name="Encoded" maxlength="7" minlength="7">
+      <button disabled>Decode!</button>
       <span id="errorSpan"></span>
     </div>
   </div>

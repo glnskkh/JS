@@ -1,11 +1,6 @@
-function hammingEncode(content) {
-  let number = parseInt(content, 2);
-
-  return { result: number }
+function hammingEncode(binaryString) {
 }
 
 function hammingDecode(content) {
-  let number = parseInt(content, 2);
 
-  return { error: "aaa" }
 }
