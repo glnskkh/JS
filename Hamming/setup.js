@@ -1,16 +1,25 @@
 const CODE_LEN = 4;
 const ENCODED_LEN = 7;
 
-validateInput('.code input', `.code button`, CODE_LEN);
-validateInput('.encode input', '.encode button', ENCODED_LEN);
+let code = {
+  input: checkedGet('.code input'),
+  button: checkedGet('.code button')
+};
 
-wrapPress('.code input', '.encode input', '.code button', hammingEncode, '#errorSpan');
-wrapPress('.encode input', '.code input', '.encode button', hammingDecode, '#errorSpan');
+let encode = {
+  input: checkedGet('.encode input'),
+  button: checkedGet('.encode button')
+};
 
-function checkBinary(content, expectedLenght) {
-  if (content.length != expectedLenght)
-    return false;
+let errorSpan = checkedGet('#errorSpan');
 
+validateInput(code.input, code.button, CODE_LEN);
+validateInput(encode.input, encode.button, ENCODED_LEN);
+
+wrapPress(code.button, hammingEncode, code.input, encode.input, errorSpan);
+wrapPress(encode.button, hammingDecode, encode.input, code.input, errorSpan);
+
+function checkBinary(content) {
   for (let char of content)
     if (!(char == '0' || char == '1'))
       return false;
@@ -18,53 +27,56 @@ function checkBinary(content, expectedLenght) {
   return true;
 }
 
-function checkedGet(id) {
-  let element = document.querySelector(id);
+function checkLength(content, expectedLength) {
+  return content.length - expectedLength;
+}
+
+function checkedGet(selector) {
+  let element = document.querySelector(selector);
 
   if (!element) {
-    console.error(`there is no such element with id ${id}`);
+    console.error(`there is no such element with id ${selector}`);
     return;
   }
 
   return element;
 }
 
-function validateInput(inputId, buttonId, expectedLenght) {
-  let input = checkedGet(inputId);
-  let button = checkedGet(buttonId);
+function removeLastChar(inputElement) {
+  inputElement.value = inputElement.value.slice(0, inputElement.value.length - 1);
+}
 
-  if (!input || !button) {
-    console.error("error while validateButton! one of elements wasnt found");
-    return;
-  }
-
+function validateInput(input, button, expectedLength) {
   input.oninput = _ => {
-    button.disabled = !checkBinary(input.value, expectedLenght);
+    let isBinary = checkBinary(input.value);
+    let lengthOverflow = checkLength(input.value, expectedLength);
+
+    if (lengthOverflow > 0) {
+      removeLastChar(input);
+      lengthOverflow = checkLength(input.value, expectedLength);
+    }
+
+    if (!isBinary) {
+      removeLastChar(input);
+      isBinary = checkBinary(input.value);
+    }
+
+    button.disabled = !(isBinary && lengthOverflow == 0);
   };
 }
 
-function wrapPress(inputId, outputId, buttonId, f, errorId) {
-  let input = checkedGet(inputId);
-  let button = checkedGet(buttonId);
-  let output = checkedGet(outputId);
-
-  let errorElement = checkedGet(errorId);
-
-  if (!input || !button || !output || !errorElement) {
-    console.error("error while wrapPress! one of elements wasnt found")
-    return;
-  }
-
+function wrapPress(button, f, input, output, errorSpan) {
   button.onclick = _ => {
     let { result, error } = f(input.value);
 
     if (result == undefined) {
-      errorElement.innerText = error;
       output.value = "";
-      return;
+      errorSpan.innerText = error;
+      button.disabled = true;
+    } else {
+      output.value = result;
+      errorSpan.innerText = "";
+      button.disabled = false;
     }
-
-    errorElement.innerText = "";
-    output.value = result;
   };
 }
