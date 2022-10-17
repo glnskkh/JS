@@ -86,25 +86,25 @@ class Binary {
 }
 
 function insertCodeBits(number) {
-  for (let i = 1; i <= number.length(); i <<= 1)
-    number.insertBit(i - 1);
+  for (let twoPower = 1; twoPower <= number.length(); twoPower *= 2)
+    number.insertBit(twoPower - 1);
 }
 
 function calculateCodeBits(number) {
-  for (let i = 1; i <= number.length(); i <<= 1) {
+  for (let twoPower = 1; twoPower <= number.length(); twoPower *= 2) {
     let xorResult = 0;
 
-    let d = i << 1;
-    for (let j = 0; j < number.length(); j += d) {
+    let nextTwoPower = twoPower * 2;
+    for (let i = twoPower - 1; i < number.length(); i += nextTwoPower) {
       let range = number
-        .getRange(i - 1 + j, i - 1 + (j + i))
+        .getRange(i, i + twoPower);
 
       let bits = Binary.asBits(range);
 
-      xorResult ^= bits.reduce((a, b) => a ^ b, 1);
+      xorResult ^= bits.reduce((a, b) => a ^ b, 0);
     }
 
-    number.setBit(i - 1, xorResult);
+    number.setBit(twoPower - 1, xorResult);
   }
 }
 
@@ -112,7 +112,7 @@ function hammingEncode(content) {
   let number = Binary.fromString(content);
 
   insertCodeBits(number);
-  calculateCodeBits(number);
+  // calculateCodeBits(number);
 
   return { result: number.toString() };
 }
