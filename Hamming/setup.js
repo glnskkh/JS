@@ -47,16 +47,16 @@ function removeLastChar(inputElement) {
 }
 
 function validateInput(input, button, expectedLength) {
-  input.oninput = _ => {
+  input.oninput = input.onpaste = input.onchange = input.onfocus = _ => {
     let isBinary = checkBinary(input.value);
     let lengthOverflow = checkLength(input.value, expectedLength);
 
-    if (lengthOverflow > 0) {
+    while (lengthOverflow > 0) {
       removeLastChar(input);
       lengthOverflow = checkLength(input.value, expectedLength);
     }
 
-    if (!isBinary) {
+    while (!isBinary && input.value.length > 0) {
       removeLastChar(input);
       isBinary = checkBinary(input.value);
     }
@@ -68,9 +68,11 @@ function validateInput(input, button, expectedLength) {
 function wrapPress(button, f, input, output, errorSpan) {
   button.onclick = _ => {
     let { result, error } = f(input.value);
-    
+
     errorSpan.innerText = error ?? '';
 
     output.value = result ?? '';
+
+    output.focus();
   };
 }
