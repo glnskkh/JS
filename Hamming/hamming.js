@@ -1,6 +1,7 @@
 class Binary {
   constructor() {
     this.inner = 0;
+    this.length = 0;
   }
 
   getBit(position) {
@@ -9,10 +10,16 @@ class Binary {
 
   setZero(position) {
     this.inner &= ~(1 << position)
+
+    if (position > this.length)
+      this.length = position + 1;
   }
 
   setOne(position) {
     this.inner |= 1 << position;
+
+    if (position > this.length)
+      this.length = position + 1;
   }
 
   setBit(position, value) {
@@ -27,6 +34,8 @@ class Binary {
 
   insertBit(position) {
     this.inner = (this.getRange(position) << position + 1) | this.getRange(0, position);
+
+    this.length++;
   }
 
   toNumber() {
@@ -34,10 +43,10 @@ class Binary {
   }
 
   toString() {
-    return Binary.asBits(this).reverse().join('');
+    return Binary.asBits(this).reverse().join('').padStart(this.length, '0');
   }
 
-  getRange(start, end = this.length()) {
+  getRange(start, end = this.length) {
     return (this.inner >> start) % (1 << (end - start));
   }
 
@@ -45,21 +54,29 @@ class Binary {
     let n = new Binary();
     n.inner = number;
 
+    while (number > 0) {
+      number >>= 1;
+      n.length++;
+    }
+
     return n;
   }
 
   static fromString(content) {
     let result = 0;
 
-    for (let i = content.length - 1; i >= 0; --i)
-      if (content[i] == '1' || content[i] == '0')
-        result <<= 1, result += content[i] - '0';
+    for (let char of content)
+      if (char == '1' || char == '0')
+        result <<= 1, result += char - '0';
       else {
         console.error(`cannot build binary from that string: ${content}`);
         return;
       }
 
-    return Binary.fromNumber(result);
+    let number = Binary.fromNumber(result);
+    number.length = content.length;
+
+    return number;
   }
 
   static asBits(number) {
@@ -79,23 +96,19 @@ class Binary {
 
     return bits;
   }
-
-  length() {
-    return Binary.asBits(this).length;
-  }
 }
 
 function insertCodeBits(number) {
-  for (let twoPower = 1; twoPower <= number.length(); twoPower *= 2)
+  for (let twoPower = 1; twoPower <= number.length; twoPower *= 2)
     number.insertBit(twoPower - 1);
 }
 
 function calculateCodeBits(number) {
-  for (let twoPower = 1; twoPower <= number.length(); twoPower *= 2) {
+  for (let twoPower = 1; twoPower <= number.length; twoPower *= 2) {
     let xorResult = 0;
 
     let nextTwoPower = twoPower * 2;
-    for (let i = twoPower - 1; i < number.length(); i += nextTwoPower) {
+    for (let i = twoPower; i < number.length; i += nextTwoPower) {
       let range = number
         .getRange(i, i + twoPower);
 
@@ -112,11 +125,13 @@ function hammingEncode(content) {
   let number = Binary.fromString(content);
 
   insertCodeBits(number);
-  // calculateCodeBits(number);
+  calculateCodeBits(number);
 
   return { result: number.toString() };
 }
 
 function hammingDecode(content) {
+  let number = Binary.fromString(content);
 
+  return { error: "not implemented" };
 }
