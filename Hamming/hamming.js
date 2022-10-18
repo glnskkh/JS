@@ -1,7 +1,7 @@
 class Binary {
-  constructor() {
-    this.inner = 0;
-    this.length = 0;
+  constructor(inner = 0, length = 0) {
+    this.inner = inner;
+    this.length = length;
   }
 
   getBit(position) {
@@ -11,20 +11,22 @@ class Binary {
   setZero(position) {
     this.inner &= ~(1 << position)
 
-    if (position > this.length)
+    if (position >= this.length)
       this.length = position + 1;
   }
 
   setOne(position) {
     this.inner |= 1 << position;
 
-    if (position > this.length)
+    if (position >= this.length)
       this.length = position + 1;
   }
 
   setBit(position, value) {
-    if (!(value == 0 || value == 1))
+    if (!(value == 0 || value == 1)) {
       console.error(`value should be either 0 or 1 not ${value}`);
+      return;
+    }
 
     if (value == 0)
       this.setZero(position);
@@ -32,8 +34,43 @@ class Binary {
       this.setOne(position);
   }
 
+  invertBit(position) {
+    this.setBit(position, this.getBit(position) ^ 1);
+  }
+
+  unshiftBit(value) {
+    this.setBit(this.length, value);
+  }
+
+  pushBit(value) {
+    if (!(value == 0 || value == 1)) {
+      console.error(`value should be either 0 or 1 not ${value}`);
+      return;
+    }
+
+    this.inner = (this.inner << 1) | value;
+
+    this.length++;
+  }
+
+  popBit() {
+    if (this.length == 0) {
+      console.error("there isn`t any values to pop");
+      return;
+    }
+
+    let result = this.inner & 1;
+
+    this.inner >>= 1;
+    this.length--;
+
+    return result;
+  }
+
   insertBit(position) {
-    this.inner = (this.getRange(position) << position + 1) | this.getRange(0, position);
+    this.inner =
+      (this.getRange(position) << position + 1) |
+      this.getRange(0, position);
 
     this.length++;
   }
@@ -43,16 +80,27 @@ class Binary {
   }
 
   toString() {
-    return Binary.asBits(this).reverse().join('').padStart(this.length, '0');
+    return Binary.asBits(this)
+      .reverse()
+      .join('')
+      .padStart(this.length, '0');
   }
 
   getRange(start, end = this.length) {
     return (this.inner >> start) % (1 << (end - start));
   }
 
+  static copy(number) {
+    let n = new Binary(
+      number.inner,
+      number.length
+    );
+
+    return n;
+  }
+
   static fromNumber(number) {
-    let n = new Binary();
-    n.inner = number;
+    let n = new Binary(number, 0);
 
     while (number > 0) {
       number >>= 1;
@@ -63,36 +111,31 @@ class Binary {
   }
 
   static fromString(content) {
-    let result = 0;
+    let number = new Binary();
 
     for (let char of content)
       if (char == '1' || char == '0')
-        result <<= 1, result += char - '0';
+        number.pushBit(char - '0');
       else {
         console.error(`cannot build binary from that string: ${content}`);
         return;
       }
 
-    let number = Binary.fromNumber(result);
-    number.length = content.length;
-
     return number;
   }
 
   static asBits(number) {
-    let inner = 0;
+    let inner;
 
     if (number instanceof Binary)
-      inner = number.inner;
-    else
       inner = number;
+    else
+      inner = Binary.fromNumber(number);
 
     let bits = [];
 
-    while (inner > 0) {
-      bits.push(inner & 1);
-      inner >>= 1;
-    }
+    while (inner.length > 0)
+      bits.push(inner.popBit());
 
     return bits;
   }
@@ -108,7 +151,7 @@ function calculateCodeBits(number) {
     let xorResult = 0;
 
     let nextTwoPower = twoPower * 2;
-    for (let i = twoPower; i < number.length; i += nextTwoPower) {
+    for (let i = twoPower - 1; i < number.length; i += nextTwoPower) {
       let range = number
         .getRange(i, i + twoPower);
 
@@ -119,6 +162,30 @@ function calculateCodeBits(number) {
 
     number.setBit(twoPower - 1, xorResult);
   }
+}
+
+function getCodeBits(number) {
+  let result = new Binary();
+
+  for (let i = 1; i < number.length; i *= 2)
+    result.pushBit(number.getBit(i - 1));
+
+  return result;
+}
+
+function getNonCodeBits(number) {
+  let result = new Binary();
+
+  for (let i = 1, j = 0; j < number.length; ++j) {
+    if (j == i - 1) {
+      i *= 2;
+      continue;
+    }
+
+    result.unshiftBit(number.getBit(j));
+  }
+
+  return result;
 }
 
 function hammingEncode(content) {
@@ -133,5 +200,14 @@ function hammingEncode(content) {
 function hammingDecode(content) {
   let number = Binary.fromString(content);
 
-  return { error: "not implemented" };
+  calculateCodeBits(number);
+
+  let code = getCodeBits(number).toNumber();
+
+  if (code > 0)
+    number.invertBit(code - 1);
+
+  let result = getNonCodeBits(number)
+
+  return { result: result.toString() };
 }
