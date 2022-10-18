@@ -68,15 +68,9 @@ function validateInput(input, button, expectedLength) {
 function wrapPress(button, f, input, output, errorSpan) {
   button.onclick = _ => {
     let { result, error } = f(input.value);
+    
+    errorSpan.innerText = error ?? '';
 
-    if (result == undefined) {
-      output.value = "";
-      errorSpan.innerText = error;
-      button.disabled = true;
-    } else {
-      output.value = result;
-      errorSpan.innerText = "";
-      button.disabled = false;
-    }
+    output.value = result ?? '';
   };
 }
