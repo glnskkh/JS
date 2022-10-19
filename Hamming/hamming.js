@@ -168,7 +168,7 @@ function getCodeBits(number) {
   let result = new Binary();
 
   for (let i = 1; i < number.length; i *= 2)
-    result.pushBit(number.getBit(i - 1));
+    result.unshiftBit(number.getBit(i - 1));
 
   return result;
 }
@@ -204,10 +204,13 @@ function hammingDecode(content) {
 
   let code = getCodeBits(number).toNumber();
 
-  if (code > 0)
+  let error;
+  if (code > 0) {
+    error = `there was an error in ${code} bit (and was corrected)`;
     number.invertBit(code - 1);
+  }
 
   let result = getNonCodeBits(number)
 
-  return { result: result.toString() };
+  return { result: result.toString(), error };
 }
