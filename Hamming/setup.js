@@ -1,5 +1,7 @@
-const CODE_LEN = 4;
-const ENCODED_LEN = 7;
+const PARITY_BITS = 3;
+
+const ENCODED_LEN = Math.pow(2, PARITY_BITS) - 1;
+const CODE_LEN = ENCODED_LEN - PARITY_BITS;
 
 let code = {
   input: checkedGet('.code input'),
@@ -13,8 +15,8 @@ let encode = {
 
 let errorSpan = checkedGet('#errorSpan');
 
-validateInput(code.input, code.button, CODE_LEN);
-validateInput(encode.input, encode.button, ENCODED_LEN);
+validateInput(code.input, CODE_LEN, code.button);
+validateInput(encode.input, ENCODED_LEN, encode.button);
 
 wrapPress(code.button, hammingEncode, code.input, encode.input, errorSpan);
 wrapPress(encode.button, hammingDecode, encode.input, code.input, errorSpan);
@@ -43,10 +45,11 @@ function checkedGet(selector) {
 }
 
 function removeLastChar(inputElement) {
-  inputElement.value = inputElement.value.slice(0, inputElement.value.length - 1);
+  inputElement.value =
+    inputElement.value.slice(0, inputElement.value.length - 1);
 }
 
-function validateInput(input, button, expectedLength) {
+function validateInput(input, expectedLength, button) {
   input.oninput = input.onpaste = input.onchange = input.onfocus = _ => {
     let isBinary = checkBinary(input.value);
     let lengthOverflow = checkLength(input.value, expectedLength);
@@ -70,8 +73,7 @@ function wrapPress(button, f, input, output, errorSpan) {
     let { result, error } = f(input.value);
 
     errorSpan.innerText = error ?? '';
-
-    output.value = result ?? '';
+    output.value = result;
 
     output.focus();
   };

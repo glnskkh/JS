@@ -8,6 +8,10 @@ class Binary {
     return (this.inner >> position) & 1;
   }
 
+  getRange(start, end = this.length) {
+    return (this.inner >> start) % (1 << (end - start));
+  }
+
   setZero(position) {
     this.inner &= ~(1 << position)
 
@@ -86,10 +90,6 @@ class Binary {
       .padStart(this.length, '0');
   }
 
-  getRange(start, end = this.length) {
-    return (this.inner >> start) % (1 << (end - start));
-  }
-
   static copy(number) {
     let n = new Binary(
       number.inner,
@@ -99,15 +99,15 @@ class Binary {
     return n;
   }
 
-  static fromNumber(number) {
-    let n = new Binary(number, 0);
+  static fromNumber(n) {
+    let number = new Binary(n, 0);
 
-    while (number > 0) {
-      number >>= 1;
-      n.length++;
+    while (n > 0) {
+      n >>= 1;
+      number.length++;
     }
 
-    return n;
+    return number;
   }
 
   static fromString(content) {
@@ -124,18 +124,28 @@ class Binary {
     return number;
   }
 
-  static asBits(number) {
-    let inner;
+  static wrapTo(number) {
+    let result;
 
     if (number instanceof Binary)
-      inner = number;
-    else
-      inner = Binary.fromNumber(number);
+      result = number;
+    else if (typeof number == 'number')
+      result = Binary.fromNumber(number);
+    else {
+      console.error(`value should be either Binary or Number, not ${typeof number}`);
+      return;
+    }
+
+    return result;
+  }
+
+  static asBits(n) {
+    let number = Binary.wrapTo(n);
 
     let bits = [];
 
-    while (inner.length > 0)
-      bits.push(inner.popBit());
+    while (number.length > 0)
+      bits.push(number.popBit());
 
     return bits;
   }
@@ -147,11 +157,15 @@ function insertCodeBits(number) {
 }
 
 function calculateCodeBits(number) {
-  for (let twoPower = 1; twoPower <= number.length; twoPower *= 2) {
+  for (let twoPower = 1;
+    twoPower <= number.length;
+    twoPower *= 2) {
     let xorResult = 0;
 
     let nextTwoPower = twoPower * 2;
-    for (let i = twoPower - 1; i < number.length; i += nextTwoPower) {
+    for (let i = twoPower - 1;
+      i < number.length;
+      i += nextTwoPower) {
       let range = number
         .getRange(i, i + twoPower);
 
@@ -167,8 +181,10 @@ function calculateCodeBits(number) {
 function getCodeBits(number) {
   let result = new Binary();
 
-  for (let i = 1; i < number.length; i *= 2)
-    result.unshiftBit(number.getBit(i - 1));
+  for (let twoPower = 1;
+    twoPower < number.length;
+    twoPower *= 2)
+    result.unshiftBit(number.getBit(twoPower - 1));
 
   return result;
 }
@@ -176,9 +192,9 @@ function getCodeBits(number) {
 function getNonCodeBits(number) {
   let result = new Binary();
 
-  for (let i = 1, j = 0; j < number.length; ++j) {
-    if (j == i - 1) {
-      i *= 2;
+  for (let twoPower = 1, j = 0; j < number.length; ++j) {
+    if (j == twoPower - 1) {
+      twoPower *= 2;
       continue;
     }
 
@@ -210,7 +226,7 @@ function hammingDecode(content) {
     number.invertBit(code - 1);
   }
 
-  let result = getNonCodeBits(number)
+  let result = getNonCodeBits(number);
 
   return { result: result.toString(), error };
 }
