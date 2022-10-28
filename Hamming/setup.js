@@ -13,13 +13,18 @@ let encode = {
   button: checkedGet('.encode button')
 };
 
+let decode = {
+  input: checkedGet('.decode input')
+};
+
 let errorSpan = checkedGet('#errorSpan');
 
 validateInput(code.input, CODE_LEN, code.button);
 validateInput(encode.input, ENCODED_LEN, encode.button);
 
 wrapPress(code.button, hammingEncode, code.input, encode.input, errorSpan);
-wrapPress(encode.button, hammingDecode, encode.input, code.input, errorSpan);
+wrapPress(encode.button, hammingDecode, encode.input, decode.input, errorSpan);
+
 
 function checkBinary(content) {
   for (let char of content)
@@ -44,24 +49,35 @@ function checkedGet(selector) {
   return element;
 }
 
-function removeLastChar(inputElement) {
+function removeLastChars(inputElement, length) {
   inputElement.value =
-    inputElement.value.slice(0, inputElement.value.length - 1);
+    inputElement.value.slice(0, inputElement.value.length - length);
+}
+
+function replaceNonBinary(inputElement) {
+  let value = '';
+
+  for (let char of inputElement.value)
+    if (char == '0' || char == '1')
+      value = value.concat(char);
+
+  inputElement.value = value;
 }
 
 function validateInput(input, expectedLength, button) {
   input.oninput = input.onpaste = input.onchange = input.onfocus = _ => {
     let isBinary = checkBinary(input.value);
-    let lengthOverflow = checkLength(input.value, expectedLength);
 
-    while (lengthOverflow > 0) {
-      removeLastChar(input);
-      lengthOverflow = checkLength(input.value, expectedLength);
+    if (!isBinary) {
+      replaceNonBinary(input);
+      isBinary = checkBinary(input.value);
     }
 
-    while (!isBinary && input.value.length > 0) {
-      removeLastChar(input);
-      isBinary = checkBinary(input.value);
+    let lengthOverflow = checkLength(input.value, expectedLength);
+
+    if (lengthOverflow > 0) {
+      removeLastChars(input, lengthOverflow);
+      lengthOverflow = checkLength(input.value, expectedLength);
     }
 
     button.disabled = !(isBinary && lengthOverflow == 0);
