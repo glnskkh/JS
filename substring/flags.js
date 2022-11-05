@@ -2,6 +2,7 @@ class Flags {
   constructor() {
     this.params = {};
     this.flags = {};
+    this.other = {};
   }
 
   addParameter(name, defaultValue) {
@@ -12,23 +13,15 @@ class Flags {
     this.flags[name] = false;
   }
 
-  isFlag(string) {
-    return this.flags[string] != undefined;
-  }
-
-  isParameter(string) {
-    return this.params[string] != undefined;
-  }
-
   parse(argv) {
-    let flags = { ...this.params, ...this.flags };
+    let flags = { ...this.params, ...this.flags, other: [] };
 
     for (let i = 0; i < argv.length; ++i) {
       const arg = argv[i];
 
-      if (this.isFlag(arg)) {
+      if (this.flags[arg] != undefined) {
         flags[arg] = true;
-      } else if (this.isParameter(arg)) {
+      } else if (this.params[arg] != undefined) {
         let value = argv[i + 1];
 
         if (value == undefined) {
@@ -40,6 +33,8 @@ class Flags {
           value = Number(value);
 
         flags[arg] = value;
+      } else {
+        flags.other.push(arg);
       }
     }
 

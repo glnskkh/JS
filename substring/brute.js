@@ -1,8 +1,8 @@
 let { Find } = require('./find');
 
 class FindBrute extends Find {
-  constructor(buffer, query) {
-    super(buffer, query);
+  constructor(query) {
+    super(query);
   }
 
   findNext() {

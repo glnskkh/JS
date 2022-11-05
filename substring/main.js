@@ -6,12 +6,14 @@ let flags = parseFlags(process.argv);
 let string = checkedReadFile(flags['-b']);
 let substring = checkedReadFile(flags['-q']);
 
-let finder = createFinder(flags['-a'], string, substring);
+
+let finder = createFinder(flags['-a'], substring);
+
 
 if (flags['-t'])
   console.time('search');
 
-let indecies = Finder.get(finder, flags['-n']);
+let indecies = Finder.getIndecies(string, finder, flags['-n']);
 
 if (flags['-t'])
   console.timeEnd('search');

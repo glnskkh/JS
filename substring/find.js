@@ -1,10 +1,15 @@
 const NOT_FOUND = -1;
 
 class Find {
-  constructor(buffer, query) {
-    this.buffer = buffer;
+  constructor(query) {
+    this.buffer = [];
     this.query = query;
 
+    this.cursor = 0;
+  }
+
+  setBuffer(buffer) {
+    this.buffer = buffer;
     this.cursor = 0;
   }
 
@@ -14,7 +19,9 @@ class Find {
 }
 
 class Finder {
-  static get(finder, n = -1) {
+  static getIndecies(buffer, finder, n = -1) {
+    finder.setBuffer(buffer);
+
     let indecies = [];
 
     let index;

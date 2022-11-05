@@ -1,15 +1,17 @@
 const { Find, NOT_FOUND } = require('./find');
 
 class FindHash extends Find {
-  constructor(buffer, query, hash) {
-    super(buffer, query);
-    this.hash = hash;
-    this.hashSum = hash.initial(buffer, query.length);
+  constructor(query, hashFunc) {
+    super(query);
 
-    this.querySum = hash.initial(query, query.length);
+    this.hashFunc = hashFunc;
+    this.querySum = this.hashFunc.initial(query, query.length);
   }
 
   findNext() {
+    if (this.cursor == 0)
+      this.hashSum = this.hashFunc.initial(this.buffer, this.query.length);
+
     let index = NOT_FOUND;
 
     while (this.cursor + this.query.length <= this.buffer.length && index == NOT_FOUND) {
@@ -20,7 +22,7 @@ class FindHash extends Find {
         let last = this.buffer[this.cursor];
         let next = this.buffer[this.cursor + this.query.length];
 
-        this.hashSum = this.hash.next(this.hashSum, last.charCodeAt(0), next.charCodeAt(0));
+        this.hashSum = this.hashFunc.next(this.hashSum, last.charCodeAt(0), next.charCodeAt(0));
       }
 
       ++this.cursor;

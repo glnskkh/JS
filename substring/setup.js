@@ -11,8 +11,8 @@ function parseFlags(argv) {
   flags.addFlag('-c');
   flags.addParameter('-n', -1);
   flags.addParameter('-a', 'brute');
-  flags.addParameter('-b', '1.txt');
-  flags.addParameter('-q', '1.txt');
+  flags.addParameter('-b', '');
+  flags.addParameter('-q', '');
 
   return flags.parse(argv);
 }
@@ -26,16 +26,16 @@ function checkedReadFile(path) {
   return readFileSync(path, 'utf8');
 }
 
-function createFinder(algo, string, substring) {
+function createFinder(algo, substring) {
   switch (algo) {
     case 'brute':
-      return new FindBrute(string, substring);
+      return new FindBrute(substring);
     case 'hashSum':
-      return new FindHash(string, substring, hashSum);
+      return new FindHash(substring, hashSum);
     case 'hashSqSum':
-      return new FindHash(string, substring, hashSqSum);
+      return new FindHash(substring, hashSqSum);
     case 'hashRK':
-      return new FindHash(string, substring, hashRK);
+      return new FindHash(substring, hashRK);
     default:
       console.error('there is no such algo!');
       process.exit(-1);
@@ -43,7 +43,8 @@ function createFinder(algo, string, substring) {
 }
 
 function countCollisions(string, substring, indecies) {
-  let bruteIndecies = Finder.get(new FindBrute(string, substring));
+  let bruteFinder = new FindBrute(substring);
+  let bruteIndecies = Finder.getIndecies(string, bruteFinder);
 
   let collisions = 0;
   let i = 0;
@@ -55,7 +56,7 @@ function countCollisions(string, substring, indecies) {
       ++collisions;
   }
 
-  return collisions
+  return collisions;
 }
 
 module.exports = { parseFlags, checkedReadFile, createFinder, countCollisions };
