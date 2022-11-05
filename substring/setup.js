@@ -7,12 +7,12 @@ const { hashSum, hashSqSum, hashRK, FindHash } = require("./hash");
 function parseFlags(argv) {
   let flags = new Flags();
 
-  flags.addFlag('-t');
-  flags.addFlag('-c');
-  flags.addParameter('-n', -1);
-  flags.addParameter('-a', 'brute');
-  flags.addParameter('-b', '');
-  flags.addParameter('-q', '');
+  flags.addFlag('time', 't');
+  flags.addFlag('collisions', 'c');
+  flags.addParameter('first', 'n', -1);
+  flags.addParameter('algo', 'a', 'brute');
+  flags.addParameter('buffer', 'b');
+  flags.addParameter('query', 'q');
 
   return flags.parse(argv);
 }
@@ -46,14 +46,14 @@ function countCollisions(string, substring, indecies) {
   let bruteFinder = new FindBrute(substring);
   let bruteIndecies = Finder.getIndecies(string, bruteFinder);
 
-  let collisions = 0;
+  let collisions = [];
   let i = 0;
   for (let index of indecies) {
     while (bruteIndecies[i] < index)
       ++i;
 
     if (bruteIndecies[i] != index)
-      ++collisions;
+      collisions.push(index);
   }
 
   return collisions;

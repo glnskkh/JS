@@ -2,7 +2,6 @@ const NOT_FOUND = -1;
 
 class Find {
   constructor(query) {
-    this.buffer = [];
     this.query = query;
 
     this.cursor = 0;
