@@ -1,14 +1,16 @@
 const { existsSync, readFileSync } = require('fs');
-const { FindBrute } = require('./brute');
-const { Finder } = require('./find');
+const { Finder, Buffer } = require('./find');
 const { Flags } = require('./flags');
+const { FindBrute } = require('./brute');
 const { hashSum, hashSqSum, hashRK, FindHash } = require("./hash");
+const { Automata } = require("./auto");
 
 function parseFlags(argv) {
   let flags = new Flags();
 
   flags.addFlag('time', 't');
   flags.addFlag('collisions', 'c');
+  flags.addFlag('table', 'T');
   flags.addParameter('first', 'n', -1);
   flags.addParameter('algo', 'a', 'brute');
   flags.addParameter('buffer', 'b');
@@ -17,25 +19,30 @@ function parseFlags(argv) {
   return flags.parse(argv);
 }
 
-function checkedReadFile(path) {
+function getBuffer(path) {
   if (!existsSync(path)) {
     console.error(`there is no such file ${path}`);
     process.exit(-1);
   }
 
-  return readFileSync(path, 'utf8');
+  let byteBuffer = readFileSync(path);
+  let buffer = new Buffer(byteBuffer);
+
+  return buffer;
 }
 
-function createFinder(algo, substring) {
+function createFinder(algo, query) {
   switch (algo) {
     case 'brute':
-      return new FindBrute(substring);
+      return new FindBrute(query);
     case 'hashSum':
-      return new FindHash(substring, hashSum);
+      return new FindHash(query, hashSum);
     case 'hashSqSum':
-      return new FindHash(substring, hashSqSum);
+      return new FindHash(query, hashSqSum);
     case 'hashRK':
-      return new FindHash(substring, hashRK);
+      return new FindHash(query, hashRK);
+    case 'auto':
+      return new Automata(query);
     default:
       console.error('there is no such algo!');
       process.exit(-1);
@@ -59,4 +66,4 @@ function countCollisions(string, substring, indecies) {
   return collisions;
 }
 
-module.exports = { parseFlags, checkedReadFile, createFinder, countCollisions };
+module.exports = { parseFlags, getBuffer, createFinder, countCollisions };

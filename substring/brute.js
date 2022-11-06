@@ -1,25 +1,31 @@
-let { Find } = require('./find');
+let { Find, NOT_FOUND } = require('./find');
 
 class FindBrute extends Find {
   constructor(query) {
     super(query);
   }
 
-  findNext() {
-    while (this.cursor + this.query.length <= this.buffer.length) {
+  findNext(buffer) {
+    let index = NOT_FOUND;
+
+    while (buffer.left() >= this.query.left()) {
       let valid = true;
 
-      for (let i = 0; i < this.query.length; ++i)
-        if (this.query[i] != this.buffer[this.cursor + i])
+      for (let i = 0; i < this.query.left(); ++i)
+        if (this.query.get(i) != buffer.getRelative(i)) {
           valid = false;
+          break;
+        }
 
-      this.cursor++;
+      if (valid) {
+        index = buffer.cursor;
+        break;
+      }
 
-      if (valid)
-        return this.cursor - 1;
+      buffer.moveCursor(1);
     }
 
-    return -1;
+    return index;
   }
 }
 
