@@ -3,6 +3,7 @@ const NOT_FOUND = -1;
 class Find {
   constructor(query) {
     this.query = query;
+    this.queryLen = query.left();
   }
 
   findNext(buffer) {
@@ -15,10 +16,11 @@ class Finder {
     let indecies = [];
 
     let index;
-    while ((index = finder.findNext(buffer)) != NOT_FOUND && (n--) != 0) {
+    while (
+      (index = finder.findNext(buffer)) != NOT_FOUND &&
+      (n--) != 0
+    )
       indecies.push(index);
-      buffer.moveCursor(1);
-    }
 
     return indecies;
   }
@@ -30,20 +32,16 @@ class Buffer {
     this.cursor = 0;
   }
 
-  getShifted(index = 0, shift = this.cursor) {
-    return this.iterable[index + shift];
+  getRelative(index = 0, offset = this.cursor) {
+    return this.iterable[offset + index];
   }
 
   get(index = this.cursor) {
-    return this.getShifted(0, index);
+    return this.getRelative(0, index);
   }
 
   getNext() {
     return this.iterable[this.cursor++];
-  }
-
-  getRelative(offset = 0) {
-    return this.get(this.cursor + offset);
   }
 
   moveCursor(shift, offset = this.cursor) {
@@ -52,6 +50,10 @@ class Buffer {
 
   left(index = this.cursor) {
     return this.iterable.length - index;
+  }
+
+  flush() {
+    this.cursor = 0;
   }
 }
 

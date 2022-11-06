@@ -29,19 +29,33 @@ class Flags {
       this.flags[shortName] = this.flags[longName];
   }
 
+  exsistsParam(name) {
+    return this.params[name] != undefined;
+  }
+
+  exsistsFlag(name) {
+    return this.flags[name] != undefined;
+  }
+
+  static trimStart(argument) {
+    let j = 0;
+    while (argument[j] == FLAG_START)
+      j++;
+
+    let flagName = argument.slice(j);
+
+    return flagName;
+  }
+
   parse(argv) {
     let flags = { ...this.params, ...this.flags };
 
     for (let i = 0; i < argv.length; ++i) {
-      const arg = argv[i];
+      const argument = argv[i];
 
-      let j = 0;
-      while (arg[j] == FLAG_START)
-        j++;
+      let flagName = Flags.trimStart(argument);
 
-      let flagName = arg.slice(j);
-
-      if (this.params[flagName] != undefined) {
+      if (this.exsistsParam(flagName)) {
         let value = argv[++i];
 
         if (value == undefined) {
@@ -53,7 +67,7 @@ class Flags {
           value = Number(value);
 
         flags[flagName].value = value;
-      } else if (this.flags[flagName] != undefined)
+      } else if (this.exsistsFlag(flagName))
         flags[flagName].value = true;
     }
 

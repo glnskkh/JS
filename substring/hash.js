@@ -1,11 +1,10 @@
-const { Find, NOT_FOUND, Buffer } = require('./find');
+const { Find, NOT_FOUND } = require('./find');
 
 class FindHash extends Find {
   constructor(query, hashFunc) {
     super(query);
 
     this.hashFunc = hashFunc;
-    this.queryLen = this.query.left()
     this.querySum = this.hashFunc.initial(query, this.queryLen);
   }
 
@@ -21,11 +20,10 @@ class FindHash extends Find {
 
       if (this.queryLen < buffer.left()) {
         let last = buffer.get();
-        let next = buffer.getShifted(this.queryLen);
+        let next = buffer.getRelative(this.queryLen);
 
         this.hashSum = this.hashFunc.next(this.hashSum, last, next);
-      } else
-        break;
+      }
 
       buffer.moveCursor(1);
     }
@@ -55,7 +53,7 @@ const hashSum = new RecHash({
     let result = 0;
 
     for (let i = 0; i < len; ++i)
-      result += buffer.getShifted(i);
+      result += buffer.getRelative(i);
 
     return result;
   },
@@ -68,7 +66,7 @@ const hashSqSum = new RecHash({
     let hash = 0;
 
     for (let i = 0; i < len; ++i)
-      hash += Math.pow(buffer.getShifted(i), 2);
+      hash += Math.pow(buffer.getRelative(i), 2);
 
     return hash;
   },
@@ -85,7 +83,7 @@ const hashRK = new RecHash({
     let hash = 0;
 
     for (let i = 0; i < len; ++i) {
-      hash = (hash + this.pow * buffer.getShifted(-i, len - 1)) % this.p;
+      hash = (hash + this.pow * buffer.getRelative(-i, len - 1)) % this.p;
       this.pow = (this.pow * this.x) % this.p;
     }
 

@@ -1,6 +1,5 @@
 const { Finder } = require("./find");
-const { getBuffer, countCollisions, createFinder, parseFlags } = require("./setup");
-const { Automata } = require("./auto");
+const { getBuffer, createFinder, parseFlags, getCollisions } = require("./setup");
 
 let flags = parseFlags(process.argv);
 
@@ -16,9 +15,6 @@ let indecies = Finder.getIndecies(buffer, finder, flags.first);
 if (flags.time) console.timeEnd('search');
 
 if (flags.collisions)
-  console.log(`collisions: ${countCollisions(buffer, query, indecies)}`);
-
-if (flags.table && finder instanceof Automata)
-  console.log(`table: ${finder.table}`);
+  console.log(`collisions: ${getCollisions(buffer, query, indecies)}`);
 
 console.log(indecies);

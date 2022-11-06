@@ -3,7 +3,6 @@ const { Finder, Buffer } = require('./find');
 const { Flags } = require('./flags');
 const { FindBrute } = require('./brute');
 const { hashSum, hashSqSum, hashRK, FindHash } = require("./hash");
-const { Automata } = require("./auto");
 
 function parseFlags(argv) {
   let flags = new Flags();
@@ -41,17 +40,17 @@ function createFinder(algo, query) {
       return new FindHash(query, hashSqSum);
     case 'hashRK':
       return new FindHash(query, hashRK);
-    case 'auto':
-      return new Automata(query);
     default:
       console.error('there is no such algo!');
       process.exit(-1);
   }
 }
 
-function countCollisions(string, substring, indecies) {
-  let bruteFinder = new FindBrute(substring);
-  let bruteIndecies = Finder.getIndecies(string, bruteFinder);
+function getCollisions(buffer, query, indecies) {
+  buffer.flush();
+
+  let bruteFinder = new FindBrute(query);
+  let bruteIndecies = Finder.getIndecies(buffer, bruteFinder);
 
   let collisions = [];
   let i = 0;
@@ -66,4 +65,4 @@ function countCollisions(string, substring, indecies) {
   return collisions;
 }
 
-module.exports = { parseFlags, getBuffer, createFinder, countCollisions };
+module.exports = { parseFlags, getBuffer, createFinder, getCollisions };

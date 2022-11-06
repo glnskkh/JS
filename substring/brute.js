@@ -8,19 +8,17 @@ class FindBrute extends Find {
   findNext(buffer) {
     let index = NOT_FOUND;
 
-    while (buffer.left() >= this.query.left()) {
+    while (this.queryLen <= buffer.left() && index == NOT_FOUND) {
       let valid = true;
 
-      for (let i = 0; i < this.query.left(); ++i)
+      for (let i = 0; i < this.queryLen; ++i)
         if (this.query.get(i) != buffer.getRelative(i)) {
           valid = false;
           break;
         }
 
-      if (valid) {
+      if (valid)
         index = buffer.cursor;
-        break;
-      }
 
       buffer.moveCursor(1);
     }
