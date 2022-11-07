@@ -17,4 +17,7 @@ if (flags.time) console.timeEnd('search');
 if (flags.collisions)
   console.log(`collisions: ${getCollisions(buffer, query, indecies)}`);
 
+if (flags.table && flags.algo == 'auto')
+  console.log(finder.table);
+
 console.log(indecies);

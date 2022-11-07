@@ -3,6 +3,7 @@ const { Finder, Buffer } = require('./find');
 const { Flags } = require('./flags');
 const { FindBrute } = require('./brute');
 const { hashSum, hashSqSum, hashRK, FindHash } = require("./hash");
+const { FindAuto } = require('./auto');
 
 function parseFlags(argv) {
   let flags = new Flags();
@@ -40,6 +41,8 @@ function createFinder(algo, query) {
       return new FindHash(query, hashSqSum);
     case 'hashRK':
       return new FindHash(query, hashRK);
+    case 'auto':
+      return new FindAuto(query);
     default:
       console.error('there is no such algo!');
       process.exit(-1);

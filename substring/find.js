@@ -27,7 +27,7 @@ class Finder {
 }
 
 class Buffer {
-  constructor(iterable) {
+  constructor(iterable = []) {
     this.iterable = iterable;
     this.cursor = 0;
   }
@@ -54,6 +54,18 @@ class Buffer {
 
   flush() {
     this.cursor = 0;
+  }
+
+  lenEqualParts(start1, end1, start2, end2) {
+    let i = 0;
+
+    while (
+      start1 + i < end1 &&
+      start2 + i < end2 &&
+      this.getRelative(i, start1) == this.getRelative(i, start2)
+    ) ++i;
+
+    return i;
   }
 }
 
