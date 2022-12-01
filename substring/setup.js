@@ -31,16 +31,16 @@ function getBuffer(path) {
   return buffer;
 }
 
-function createFinder(algo, query) {
+function createFinder(algo, query, check) {
   switch (algo) {
     case 'brute':
       return new FindBrute(query);
     case 'hashSum':
-      return new FindHash(query, hashSum);
+      return new FindHash(query, hashSum, check);
     case 'hashSqSum':
-      return new FindHash(query, hashSqSum);
+      return new FindHash(query, hashSqSum, check);
     case 'hashRK':
-      return new FindHash(query, hashRK);
+      return new FindHash(query, hashRK, check);
     case 'auto':
       return new FindAuto(query);
     default:
@@ -49,23 +49,16 @@ function createFinder(algo, query) {
   }
 }
 
-function getCollisions(buffer, query, indecies) {
-  buffer.flush();
+function printAutomataTable(table) {
+  console.log('[');
 
-  let bruteFinder = new FindBrute(query);
-  let bruteIndecies = Finder.getIndecies(buffer, bruteFinder);
-
-  let collisions = [];
-  let i = 0;
-  for (let index of indecies) {
-    while (bruteIndecies[i] < index)
-      ++i;
-
-    if (bruteIndecies[i] != index)
-      collisions.push(index);
+  for (let row of table) {
+    for (let transition of Object.keys(row))
+      console.log(`\t(${transition}: ${row[transition]})`);
+    console.log();
   }
 
-  return collisions;
+  console.log(']');
 }
 
-module.exports = { parseFlags, getBuffer, createFinder, getCollisions };
+module.exports = { parseFlags, getBuffer, createFinder, printAutomataTable };
