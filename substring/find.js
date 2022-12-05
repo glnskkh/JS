@@ -52,6 +52,10 @@ class Buffer {
     return this.iterable.length - index;
   }
 
+  getEnd(index = 0) {
+    return this.getRelative(-index, this.left() - 1);
+  }
+
   flush() {
     this.cursor = 0;
   }
