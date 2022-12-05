@@ -18,6 +18,7 @@ function buildPolish(expression) {
   let cursor = 0;
 
   while (cursor < expression.length) {
+    // Number processing
     let numEnd = numberEnd(expression, cursor);
 
     if (numEnd != cursor) {
@@ -30,34 +31,45 @@ function buildPolish(expression) {
       continue;
     }
 
+    // Operation processing
     let operation = expression[cursor];
-    let p = priority(operation);
+    let operationP = priority(operation);
 
-    cursor += 1;
+    ++cursor;
 
     if (operation == '(') {
       operations.push('(');
       continue;
     }
 
-    let P = priority(operations[operations.length - 1]);
+    let topOperation = operations.pop();
+    let topOperationPriority = priority(topOperation);
 
-    if (!(p < P)) {
+    if (operationP >= topOperationPriority) {
+      if (topOperation != undefined)
+        operations.push(topOperation);
+
       operations.push(operation);
       continue;
     }
 
-    while (p < P) {
-      if (operation != ')')
-        polish.push(operation);
+    while (operationP < topOperationPriority) {
+      if (topOperation != ')')
+        polish.push(topOperation);
 
-      operation = operations.pop();
-      p = priority(operation);
+      topOperation = operations.pop();
+      topOperationPriority = priority(topOperation);
     }
+
+    operations.push(operation)
   }
 
-  while (operations.length > 0)
-    polish.push(operations.pop());
+  while (operations.length > 0) {
+    let operation = operations.pop();
+
+    if (priority(operation) != priority('('))
+      polish.push(operation);
+  }
 
   return polish;
 }
@@ -66,7 +78,7 @@ function compute(polish) {
   let numbers = [];
 
   for (let operand of polish) {
-    if (typeof operand == 'number') {
+    if (priority(operand) == priority('1')) {
       numbers.push(operand);
     } else {
       let b = numbers.pop();
@@ -109,7 +121,7 @@ function perform(operation, a, b) {
 }
 
 function numberEnd(expression, start) {
-  while (start < expression.length && priority(expression[start]) == priority(''))
+  while (start < expression.length && priority(expression[start]) == priority('1'))
     ++start;
 
   return start;
