@@ -44,15 +44,16 @@ class AutomataTable {
 	static buildFrom(query) {
 		let autoTable = new AutomataTable(query.left());
 
-		for (let i = 0; i < autoTable.queryLen; ++i) {
+		for (let i = 0; i <= autoTable.queryLen; ++i) {
 			autoTable.transitions[i] = [];
 
 			autoTable.transitions[i][query.get(i)] = i + 1;
 
-			for (let j = 1; j <= i; ++j) {
+			for (let j = 0; j <= i; ++j) {
 				let len = query.lenEqualParts(0, j, i - j, i);
 
-				autoTable.transitions[i][query.get(len - 1)] = len;
+				if (len != autoTable.queryLen)
+					autoTable.transitions[i][query.get(len - 1)] = len;
 			}
 		}
 
