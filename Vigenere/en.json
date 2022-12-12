@@ -2,5 +2,6 @@
   "tag": "en",
   "base": "a",
   "end": "z",
-  "card": 26
+  "card": 26,
+  "ioc": 1.6
 }
