@@ -1,137 +1,118 @@
-#!/usr/bin/node
+class RLEJump {
+  static MIN_COUNT = 3;
+  static MAX_BYTE = (1 << 8) - 1;
 
-//
-// Following program encodes & decodes text with RLE (jump variant)
-//
+  static MAX_MULTIPLE = Math.floor(this.MAX_BYTE / 2);
+  static MAX_SINGLE = this.MAX_BYTE - this.MAX_SINGLE;
 
-// @ts-check
+  static encode(string) {
+    let output = "";
+    let offsets = [];
 
-const COUNT_MIN = 3; // Minimum sequance lenght
-const BYTE_MAX = (1 << 8) - 1;
+    let cursor = 0;
 
-// MUL_RANGE + SIN_RANGE <= BYTE_MAX
-const MUL_RANGE = Math.floor(BYTE_MAX / 2);
-const SIN_RANGE = BYTE_MAX - MUL_RANGE;
+    let multiple = false;
 
-/**
- * Encode text with RLE (jumping)
- * @param {String} string
- * @returns String
- */
-function RLE_encode(string) {
-  let output = "";
-  let buffer = "";
+    while (cursor < string.length) {
+      const currentChar = string[cursor];
+      let count = 0;
 
-  for (let i = 0, j = 0; i < string.length; i = j) {
-    let currentChar = string[i];
+      while (cursor + count < string.length && currentChar == string[cursor + count])
+        ++count;
 
-    j = i + 1;
-    while (string[j] == currentChar && j < string.length)
-      j++;
+      cursor += count;
 
-    let count = j - i;
-
-    if (count >= COUNT_MIN) {
-      while (buffer.length > 0) {
-        let bufferCountChar =
-          String.fromCharCode(Math.min(buffer.length, SIN_RANGE));
-
-        output = output
-          .concat(bufferCountChar)
-          .concat(buffer.substring(0, SIN_RANGE));
-
-        buffer = buffer.slice(SIN_RANGE);
+      if (count > this.MIN_COUNT || (multiple && offsets.at(-1)[1].length + count > this.MAX_SINGLE)) {
+        multiple = true;
+        offsets.push([multiple, count]);
+        continue;
       }
 
-      buffer = "";
-
-      while (count > 0) {
-        count -= COUNT_MIN;
-
-        let countChar = String.fromCharCode(Math.min(count, MUL_RANGE));
-
-        output = output
-          .concat(countChar)
-          .concat(currentChar);
-
-        count -= MUL_RANGE;
+      if (multiple || offsets.length == 0 || offsets.at(-1)[1].length + count > this.MAX_SINGLE) {
+        multiple = false;
+        offsets.push([multiple, 0]);
       }
-    } else {
-      for (; count > 0; count--)
-        buffer = buffer.concat(currentChar);
+
+      offsets[offsets.length - 1][1] += count;
     }
+
+    cursor = 0;
+
+    for (let offset of offsets) {
+      const [ multiple, count ] = offset;
+
+      if (multiple) {
+        output += String.fromCharCode(count - this.MIN_COUNT);
+        output += string[cursor];
+      } else {
+        output += String.fromCharCode(count + this.MAX_MULTIPLE);
+        output += string.slice(cursor, cursor + count);
+      }
+
+      cursor += count;
+    }
+
+    return output;
   }
 
-  if (0 < buffer.length) {
-    while (buffer.length > 0) {
-      let bufferCountChar =
-        String.fromCharCode((buffer.length % SIN_RANGE) + MUL_RANGE);
+  /** @param {String} string */
+  static decode(string) {
+    let output = "";
+    let cursor = 0;
 
-      output = output
-        .concat(bufferCountChar)
-        .concat(buffer.substring(0, SIN_RANGE));
+    while (cursor < string.length) {
+      let count = string[cursor++].charCodeAt(0);
 
-      buffer = buffer.slice(SIN_RANGE);
+      if (count > this.MAX_BYTE) {
+        console.error('error while decoding on char %d', cursor);
+        process.exit(-1);
+      }
+
+      if (count <= this.MAX_MULTIPLE) {
+        count += this.MIN_COUNT;
+
+        const char = string[cursor++];
+
+        while (count-- > 0)
+          output += char;
+      } else {
+        while (count-- > this.MAX_MULTIPLE) {
+          const char = string[cursor++];
+          output += char;
+        }
+      }
     }
+
+    return output;
   }
 
-  return output;
+  static test(string) {
+    return string == RLEJump.decode(RLEJump.encode(string));
+  }
 }
 
-/**
- * Decode text with RLE (jumping)
- * @param {String} string
- * @returns String
- */
-function RLE_decode(string) {
-  let output = "";
 
-  for (let i = 0; i < string.length;) {
-    const countChar = string[i++];
+const tests = [
+  "aaaabcbbbbb",
+  "aaaabbbbb12345",
+  "12345",
+  "abcA",
+  ""
+];
 
-    // Get char code of countChar
-    let count = countChar.charCodeAt(0);
-
-    if (count <= MUL_RANGE) {
-      count += COUNT_MIN;
-
-      const char = string[i++];
-
-      for (; count > 0; count--)
-        output = output.concat(char);
-    } else {
-      count -= MUL_RANGE;
-
-      for (; count > 0; count--) {
-        // !!! Shift i
-        const char = string[i++];
-
-        output = output.concat(char);
-      }
-    }
-  }
-
-  return output;
+for (let testCase of tests) {
+  console.assert(RLEJump.test(testCase), "%s", testCase);
 }
 
 
 const fs = require('fs');
 
-// Test
-const testString = "aaaabbbbb#12345";
-console.log(
-  "But tests are ".concat(
-    RLE_decode(RLE_encode(testString)) == testString ?
-      "VALID" : "INVALID"
-  )
-)
-
 let type = process.argv[2];
 
-let is_encoding = type.startsWith('en');
-let is_decoding = type.startsWith('de');
+let encoding = type.startsWith('en');
+let decoding = type.startsWith('de');
 
-if (!is_encoding && !is_decoding) {
+if (!(encoding || decoding)) {
   console.error("you should specify encode or decode mode");
   process.exit(1);
 }
@@ -147,6 +128,6 @@ const outputFile = process.argv[4];
 
 let content = fs.readFileSync(inputFile, 'utf8');
 
-let result = is_encoding ? RLE_encode(content) : RLE_decode(content);
+let result = encoding ? RLEJump.encode(content) : RLEJump.decode(content);
 
 fs.writeFileSync(outputFile, result, 'utf8');
