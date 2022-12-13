@@ -81,7 +81,7 @@ class Vigenere {
    * @param {Alphabet} alphabet
    */
   constructor(text, alphabet) {
-    this.text = text;
+    this.text = text.toLowerCase();
     this.alphabet = alphabet;
   }
 
@@ -108,12 +108,101 @@ class Vigenere {
     return output;
   }
 
+  /** @returns {String} */
+  filter() {
+    let output = '';
+
+    for (const char of this.text)
+      if (this.alphabet.belong(char))
+        output += char;
+
+    return output;
+  }
+
   /**
    * @param {String} nativeText
    */
   crack(nativeText) {
+    const countChars = (/** @type {String} */ text) => {
+      let count = {};
 
+      for (const char of text)
+        count[char] = (count[char] || 0) + 1;
+
+      return count;
+    };
+
+    const indexOfCoincidence = (/** @type {String} */ text) => {
+      let count = countChars(text);
+
+      let n = 0, total = 0;
+
+      for (let char of Object.keys(count)) {
+        n += count[char] * (count[char] - 1);
+        total += count[char];
+      }
+
+      let index = this.alphabet.cardinality * n / (total * (total - 1));
+
+      return index;
+    };
+
+    const computeKeyLength = (/** @type {String} */ filtredText) => {
+      let found = false;
+      let period = 0;
+      let slices = [];
+
+      while (!found) {
+        ++period;
+
+        slices = [];
+
+        for (let i = 0; i < filtredText.length; ++i)
+          slices.push("");
+
+        for (let i = 0; i < filtredText.length; ++i)
+          slices[i % period] += filtredText[i];
+
+        let sum = 0;
+
+        for (let i = 0; i < period; ++i)
+          sum += indexOfCoincidence(slices[i]);
+
+        let indexOfCoincidenceVal = sum / period;
+
+        if (indexOfCoincidenceVal > 1.6)
+          found = true;
+      }
+
+      return { period, slices };
+    };
+
+    const crackKey = (/** @type {String} */ nativeText) => {
+
+    }
+
+    let filtredText = this.filter();
+
+    let keyLength = computeKeyLength(filtredText);
+
+    let key = crackKey();
   }
 }
 
-let v = new Vigenere("hello world", ALPHABETS.en);
+
+const { readFileSync, writeFileSync } = require("fs");
+
+let filePath = "alice-in-wonderland.txt";
+let key = "helloworldhhhhello";
+
+let text = readFileSync(filePath, 'utf8');
+
+let v1 = new Vigenere(text, ALPHABETS.en);
+
+let encoded = v1.perform(key, "addChars");
+
+writeFileSync("out.txt", encoded);
+
+let v2 = new Vigenere(encoded, ALPHABETS.en);
+
+v2.crack(text);
