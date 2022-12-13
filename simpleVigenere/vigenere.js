@@ -5,7 +5,7 @@ class Alphabet {
    * @param {String} baseChar
    * @param {Number} cardinality
    */
-  constructor (baseChar, cardinality) {
+  constructor(baseChar, cardinality) {
     this.baseChar = baseChar;
     this.cardinality = cardinality;
   }
@@ -31,6 +31,38 @@ class Alphabet {
    */
   char(code) {
     return String.fromCharCode(code + this.baseChar.charCodeAt(0));
+  }
+
+  /**
+   * @param {String} text
+   * @returns {String}
+   * */
+  filter(text) {
+    let output = '';
+
+    for (const char of text)
+      if (this.belong(char))
+        output += char;
+
+    return output;
+  }
+
+  /**
+   * @param {String} char
+   * @param {Number} shift
+   * @returns {String}
+   */
+  shift(char, shift) {
+    if (!this.belong(char)) {
+      console.error('cannot shift char %s', char);
+      process.exit(-1);
+    }
+
+    let code = this.position(char);
+
+    let newCode = (code + shift) % this.cardinality;
+
+    return this.char(newCode);
   }
 
   /**
@@ -75,6 +107,46 @@ const ALPHABETS = {
   "ru": new Alphabet('а', 32),
 };
 
+class Chars {
+  /**
+   * @param {Object} counter
+   */
+  constructor(counter) {
+    this.count = counter;
+    this.chars = Object.keys(counter)
+  }
+
+  /**
+   * @param {String} text
+   * @returns {Chars}
+   */
+  static count(text) {
+    let counter = {};
+
+    for (const char of text)
+      counter[char] = (counter[char] || 0) + 1;
+
+    return new Chars(counter);
+  }
+
+  /**
+   * @param {String} text
+   * @returns {Chars}
+   */
+  static frequency(text) {
+    let counter = Chars.count(text);
+
+    let total = 0;
+    for (let char of counter.chars)
+      total += counter.count[char];
+
+    for (let char of counter.chars)
+      counter.count[char] /= total;
+
+    return counter;
+  }
+}
+
 class Vigenere {
   /**
    * @param {String} text
@@ -108,38 +180,19 @@ class Vigenere {
     return output;
   }
 
-  /** @returns {String} */
-  filter() {
-    let output = '';
-
-    for (const char of this.text)
-      if (this.alphabet.belong(char))
-        output += char;
-
-    return output;
-  }
-
   /**
    * @param {String} nativeText
    */
   crack(nativeText) {
-    const countChars = (/** @type {String} */ text) => {
-      let count = {};
-
-      for (const char of text)
-        count[char] = (count[char] || 0) + 1;
-
-      return count;
-    };
-
-    const indexOfCoincidence = (/** @type {String} */ text) => {
-      let count = countChars(text);
+    /** @type {(text: String) => Number} */
+    const indexOfCoincidence = (text) => {
+      let chars = Chars.count(text);
 
       let n = 0, total = 0;
 
-      for (let char of Object.keys(count)) {
-        n += count[char] * (count[char] - 1);
-        total += count[char];
+      for (let char of chars.chars) {
+        n += chars.count[char] * (chars.count[char] - 1);
+        total += chars.count[char];
       }
 
       let index = this.alphabet.cardinality * n / (total * (total - 1));
@@ -147,62 +200,143 @@ class Vigenere {
       return index;
     };
 
-    const computeKeyLength = (/** @type {String} */ filtredText) => {
+    /** @type {(filtredText: String) => String[]} */
+    const computeKeyLength = (filtredText) => {
       let found = false;
-      let period = 0;
+      let length = 0;
       let slices = [];
 
       while (!found) {
-        ++period;
+        ++length;
 
         slices = [];
 
-        for (let i = 0; i < filtredText.length; ++i)
+        for (let i = 0; i < length; ++i)
           slices.push("");
 
         for (let i = 0; i < filtredText.length; ++i)
-          slices[i % period] += filtredText[i];
+          slices[i % length] += filtredText[i];
 
         let sum = 0;
 
-        for (let i = 0; i < period; ++i)
+        for (let i = 0; i < length; ++i)
           sum += indexOfCoincidence(slices[i]);
 
-        let indexOfCoincidenceVal = sum / period;
+        let indexOfCoincidenceVal = sum / length;
 
         if (indexOfCoincidenceVal > 1.6)
           found = true;
       }
 
-      return { period, slices };
+      return slices;
     };
 
-    const crackKey = (/** @type {String} */ nativeText) => {
+    let filtredText = this.alphabet.filter(this.text);
 
+    let slices = computeKeyLength(filtredText);
+
+    let nativeFiltredText = this.alphabet.filter(nativeText.toLowerCase());
+
+    let key = this.crackKey(slices, nativeFiltredText);
+
+    return key;
+  }
+
+  /**
+   * @param {String[]} slices
+   * @param {String} nativeFiltredText
+   * @returns {String}
+   */
+  crackKey(slices, nativeFiltredText) {
+    /** @type {(nativeFrequency: Chars, sliceFrequency: Chars) => String} */
+    const crackCaesarsChar = (nativeCharsFreq, sliceFrequency) => {
+      let min = +Infinity;
+      let minShift = 0;
+
+      for (let i = 0; i < this.alphabet.cardinality; ++i) {
+        let k = 0;
+
+        for (let char of nativeCharsFreq.chars) {
+          let shifted = this.alphabet.shift(char, i);
+
+          if (nativeCharsFreq.count != undefined && sliceFrequency.count[shifted] != undefined)
+            k += (nativeCharsFreq.count[char] - sliceFrequency.count[shifted]) ** 2;
+        }
+
+        if (k < min) {
+          min = k;
+          minShift = i;
+        }
+      }
+
+      return this.alphabet.char(minShift);
+    };
+
+    let nativeCharsFreq = Chars.frequency(nativeFiltredText);
+
+    let key = "";
+    for (let slice of slices) {
+      let sliceCharFreq = Chars.frequency(slice);
+      let crackedChar = crackCaesarsChar(nativeCharsFreq, sliceCharFreq);
+
+      key += crackedChar;
     }
 
-    let filtredText = this.filter();
-
-    let keyLength = computeKeyLength(filtredText);
-
-    let key = crackKey();
+    return key;
   }
 }
 
 
-const { readFileSync, writeFileSync } = require("fs");
+const { readFileSync, writeFileSync, existsSync } = require("fs");
 
-let filePath = "alice-in-wonderland.txt";
-let key = "helloworldhhhhello";
+let mode = process.argv[2];
 
-let text = readFileSync(filePath, 'utf8');
+if (!(mode == 'encode' || mode == 'decode' )) {
+  console.error('you should specify encode/decode mode!');
+  process.exit(-1);
+}
 
-let v1 = new Vigenere(text, ALPHABETS.en);
+let lang = process.argv.at(-1) || 'en';
 
-let encoded = v1.perform(key, "addChars");
+if (!(lang == 'en' || lang == 'ru')) {
+  console.error('we do not support such lang as %s', lang);
+  process.exit(-1);
+}
 
-writeFileSync("out.txt", encoded);
+let input = process.argv[3];
 
-let v2 = new Vigenere(encoded, ALPHABETS.en);
+if (!existsSync(input)) {
+  console.error('there is no such file as %s', input);
+  process.exit(-1);
+}
 
-v2.crack(text);
+let output = process.argv[4];
+
+let text = readFileSync(input, 'utf8');
+
+let v = new Vigenere(text, ALPHABETS[lang]);
+
+if (mode == 'encode') {
+  let key = process.argv[5];
+
+  let encoded = v.perform(key, 'addChars');
+
+  writeFileSync(output, encoded, 'utf8');
+} else {
+  let native = process.argv[5];
+
+  if (!existsSync(native)) {
+    console.error('there is no such file as %s', native);
+    process.exit(-1);
+  }
+
+  let nativeText = readFileSync(native, 'utf8');
+
+  let key = v.crack(nativeText);
+
+  console.debug('key is "%s"', key);
+
+  let decoded = v.perform(key, 'subChars');
+
+  writeFileSync(output, decoded, 'utf8');
+}
