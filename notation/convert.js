@@ -1,14 +1,63 @@
 // @ts-check
 
-let expressionPath = process.argv[2];
+function checkedRead(path, encoding) {
+  const fs = require('fs');
 
-let expressionRaw = checkedRead(expressionPath);
-let expression = removeSpaces(expressionRaw);
+  if (!fs.existsSync(path)) {
+    console.error(`file ${path} is not avaliable`);
+    process.exit(-1);
+  }
 
-let polish = buildPolish(expression);
+  let rawText = fs.readFileSync(path, encoding || 'utf8');
 
-console.log(polish.join(' '));
-console.log(compute(polish));
+  return rawText;
+}
+
+function removeSpaces(string) {
+  let withoutSpaces = '';
+
+  for (let char of string)
+    if (!(char == ' ' || char == '\n' || char == '\t'))
+      withoutSpaces = withoutSpaces.concat(char);
+
+  return withoutSpaces;
+}
+
+function numberEnd(expression, start) {
+  while (start < expression.length && priority(expression[start]) == priority('1'))
+    ++start;
+
+  return start;
+}
+
+function priority(operation) {
+  switch (operation) {
+    case '(': case ')': return 0;
+    case '+': case '-': return 1;
+    case '*': case '/': return 2;
+    case '^': return 3;
+  }
+
+  return -1;
+}
+
+function perform(operation, a, b) {
+  switch (operation) {
+    case '+': return a + b;
+    case '-': return a - b;
+    case '*': return a * b;
+    case '/':
+      if (b == 0) {
+        console.error(`cannot divide ${a} by zero`);
+        process.exit(-1);
+      }
+      return a / b;
+    case '^': return Math.pow(a, b);
+    default:
+      console.error(`unsupported operation ${operation}`);
+      process.exit(-1);
+  }
+}
 
 
 function buildPolish(expression) {
@@ -91,61 +140,12 @@ function compute(polish) {
   return numbers.pop();
 }
 
-function priority(operation) {
-  switch (operation) {
-    case '(': case ')': return 0;
-    case '+': case '-': return 1;
-    case '*': case '/': return 2;
-    case '^': return 3;
-  }
 
-  return -1;
-}
+let inputFile = process.argv[2];
 
-function perform(operation, a, b) {
-  switch (operation) {
-    case '+': return a + b;
-    case '-': return a - b;
-    case '*': return a * b;
-    case '/':
-      if (b == 0) {
-        console.error(`cannot divide ${a} by zero`);
-        process.exit(-1);
-      }
-      return a / b;
-    case '^': return Math.pow(a, b);
-    default:
-      console.error(`unsupported operation ${operation}`);
-      process.exit(-1);
-  }
-}
+let expression = removeSpaces(checkedRead(inputFile));
 
-function numberEnd(expression, start) {
-  while (start < expression.length && priority(expression[start]) == priority('1'))
-    ++start;
+let polish = buildPolish(expression);
 
-  return start;
-}
-
-function removeSpaces(string) {
-  let withoutSpaces = '';
-
-  for (let char of string)
-    if (!(char == ' ' || char == '\n' || char == '\t'))
-      withoutSpaces = withoutSpaces.concat(char);
-
-  return withoutSpaces;
-}
-
-function checkedRead(path, encoding) {
-  const fs = require('fs');
-
-  if (!fs.existsSync(path)) {
-    console.error(`file ${path} is not avaliable`);
-    process.exit(-1);
-  }
-
-  let rawText = fs.readFileSync(path, encoding || 'utf8');
-
-  return rawText;
-}
+console.log(polish.join(' '));
+console.log(compute(polish));
