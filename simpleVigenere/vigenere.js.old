@@ -18,7 +18,9 @@ if (mode.startsWith('en')) {
 
   const nativeText = filterText(getFileText(6).toLowerCase(), alpha);
 
-  const key = vigenereCrack(text, alpha, nativeText);
+  const dict = getFileText(7, alpha).toLowerCase();
+
+  const key = vigenereCrack(text, alpha, nativeText, dict);
 
   console.log(key);
 
@@ -52,20 +54,20 @@ function vigenerePerform(text, key, alpha, func) {
   return output;
 }
 
-function vigenereCrack(text, alpha, nativeText) {
+function vigenereCrack(text, alpha, nativeText, dict) {
   let filtred = filterText(text, alpha);
 
   let keyLength = computeKeyLength(filtred, alpha);
 
-  let key = bruteKey(filtred, alpha, keyLength, nativeText);
+  let key = bruteKey(filtred, alpha, keyLength, nativeText, dict);
 
   return key;
 }
 
-function bruteKey(filteredText, alpha, keyLength, nativeText) {
+function bruteKey(filteredText, alpha, keyLength, nativeText, dict) {
   let tetraFrequencies = calculateTetra(nativeText, alpha);
 
-  let words = fs.readFileSync('words', 'utf8')
+  let words = dict
     .split('\n')
     .map(x => filterText(x.toLowerCase(), alpha))
     .filter(x => x.length == keyLength);
@@ -74,6 +76,10 @@ function bruteKey(filteredText, alpha, keyLength, nativeText) {
 
   for (let word of words) {
     let text = vigenerePerform(filteredText.slice(0, SAMPLE_SIZE), word, alpha, subChars);
+
+    if (word == 'привет') {
+      console.log(fitness(text, tetraFrequencies, alpha));
+    }
 
     if (fitness(text, tetraFrequencies, alpha) > -10)
       return word;
@@ -95,7 +101,7 @@ function bruteKey(filteredText, alpha, keyLength, nativeText) {
 
       let freq = tetraFrequencies[k];
 
-      if (freq == 0)
+      if (freq == undefined)
         res += -15;
       else
         res += Math.log(freq);
@@ -107,12 +113,9 @@ function bruteKey(filteredText, alpha, keyLength, nativeText) {
   }
 
   function calculateTetra(nativeText, alpha) {
-    let freq = [];
+    let freq = {};
 
-    const SAMPLE_SIZE = Math.min(nativeText.length, 300);
-
-    for (let i = 0; i < convert(alpha.card, 1, 0, 0, 0, 0); ++i)
-      freq.push(0);
+    const SAMPLE_SIZE = Math.min(nativeText.length, 1000);
 
     for (let i = 0; i < SAMPLE_SIZE - 3; ++i) {
       let k = convert(
@@ -123,10 +126,10 @@ function bruteKey(filteredText, alpha, keyLength, nativeText) {
         positionInAlpha(nativeText[i + 3], alpha),
       );
 
-      ++freq[k];
+      freq[k] = (freq[k] || 0) + 1;
     }
 
-    for (let i = 0; i < convert(alpha.card, 1, 0, 0, 0, 0); ++i)
+    for (let i in freq)
       freq[i] /= SAMPLE_SIZE - 3;
 
     return freq;
