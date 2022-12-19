@@ -49,7 +49,8 @@ function stop() {
 }
 
 function random() {
-	stop();
+	initRandom();
+	refreshWorld();
 }
 
 function changeCell(elem) {
