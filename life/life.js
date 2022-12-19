@@ -32,17 +32,24 @@ function initGeneration(height, width) {
   }
 }
 
-function newGeneration() { }
-
-function getGeneration() { }
-
 /**
  * @param {number} x
  * @param {number} y
  */
 function changeGeneration(x, y) {
+  console.debug(x, y);
+
+  arr[y][x].isAlive = !arr[y][x].isAlive;
+}
+
+function getGeneration() {
+  return arr;
+}
+
+function newGeneration() {
 
 }
+
 
 function refreshWorld() { }
 
