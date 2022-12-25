@@ -22,8 +22,8 @@ class FindMur extends Find {
         ++i;
 
       let shift = Math.max(
-        this.badSymbol[this.query.getEnd(i + 1)] || this.queryLen,
-        this.goodSuffics[i] || this.queryLen
+        this.badSymbol[buffer.getRelative(this.queryLen - 1 - i)] || this.queryLen - i,
+        this.goodSuffics[i]
       );
 
       if (i == this.queryLen)
@@ -63,8 +63,8 @@ function buildGoodSuffices(query) {
   let length = query.left(0);
   let shifts = [1]; // Для нуля совпавших символоп пусть будет сдвиг 1
 
-  for (let i = 1; i < length; ++i) {
-    for (let j = 1; j < length; ++j) {
+  for (let i = 1; i <= length; ++i) {
+    for (let j = 1; j <= length; ++j) {
       let k = 0;
 
       while (k < i && j + k < length && query.getEnd(j + k) == query.getEnd(k))

@@ -291,7 +291,7 @@ const { readFileSync, writeFileSync, existsSync } = require("fs");
 
 let mode = process.argv[2];
 
-if (!(mode == 'encode' || mode == 'decode' )) {
+if (!(mode == 'encode' || mode == 'decode')) {
   console.error('you should specify encode/decode mode!');
   process.exit(-1);
 }

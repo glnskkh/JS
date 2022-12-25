@@ -103,8 +103,7 @@ function buildPolish(expression) {
     }
 
     while (operationP < topOperationPriority) {
-      if (topOperation != ')')
-        polish.push(topOperation);
+      polish.push(topOperation);
 
       topOperation = operations.pop();
       topOperationPriority = priority(topOperation);
