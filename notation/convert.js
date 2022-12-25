@@ -109,14 +109,14 @@ function buildPolish(expression) {
       topOperationPriority = priority(topOperation);
     }
 
-    operations.push(operation)
+    if (operation != ')')
+      operations.push(operation);
   }
 
   while (operations.length > 0) {
     let operation = operations.pop();
 
-    if (priority(operation) != priority('('))
-      polish.push(operation);
+    polish.push(operation);
   }
 
   return polish;
